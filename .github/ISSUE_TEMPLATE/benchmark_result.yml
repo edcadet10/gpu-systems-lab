@@ -11,6 +11,8 @@ body:
           required: true
         - label: I kept all five fresh process-level runs for candidate and baseline.
           required: true
+        - label: The suite came from a clean commit and passes recursive result validation.
+          required: true
         - label: The attached data contains no secrets or private infrastructure details.
           required: true
   - type: textarea
@@ -34,7 +36,7 @@ body:
   - type: textarea
     attributes:
       label: Raw result files
-      description: Drag and drop JSON files here; do not paste only summary values.
+      description: Attach the manifest and every referenced child JSON; do not paste only summaries.
     validations:
       required: true
   - type: textarea

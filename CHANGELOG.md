@@ -6,6 +6,36 @@ environment, shapes, and protocol.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
+### Added
+
+- Add a deterministic suite runner that randomizes the registered provider/dtype
+  schedule and executes one provider per fresh Python process.
+- Record synchronized first-use timing, Git dirty state, runtime identity, and
+  best-effort driver, performance-state, clock, and power metadata.
+- Capture device and runtime provenance for every collective rank rather than only the
+  reporting rank.
+- Ship versioned RMSNorm, all-reduce, and suite schemas inside the Python wheel.
+- Add a `validate-result` command that recursively checks suite schedule coverage,
+  path confinement, commands, provenance, experiment identity, and child schemas.
+- Add an explicit local-versus-published result registry and contribution workflow.
+
+### Fixed
+
+- Reject non-finite correctness errors instead of allowing IEEE comparison semantics
+  to bypass the numerical gate.
+- Reject non-standard `NaN` and infinity tokens when reading report JSON.
+- Require clean, versioned state for publishable suites and refuse to reuse an existing
+  output directory.
+
+### Changed
+
+- Advance current report contracts to schema v3 while preserving the historical v2
+  contract URLs.
+- Separate first-use diagnostics from correctness-gated steady-state CUDA-event
+  samples and make current evidence boundaries prominent in the README.
+
 ## [0.1.1] - 2026-08-20
 
 ### Fixed
@@ -39,6 +69,7 @@ environment, shapes, and protocol.
 - Nsight Compute and Nsight Systems profiling targets.
 - CPU CI, contribution forms, security policy, governance, and research notes.
 
-[Unreleased]: https://github.com/edcadet10/gpu-systems-lab/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/edcadet10/gpu-systems-lab/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/edcadet10/gpu-systems-lab/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/edcadet10/gpu-systems-lab/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/edcadet10/gpu-systems-lab/releases/tag/v0.1.0

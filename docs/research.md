@@ -33,6 +33,14 @@ small; a structured operator becomes justified when tensor-subclass, export, or 
 dispatcher behavior is added. PyTorch's
 [benchmark utility documentation](https://docs.pytorch.org/docs/stable/benchmark_utils.html)
 calls out warmups, accelerator synchronization, and replicate variation.
+Triton's
+[testing API](https://triton-lang.org/main/python-api/triton.testing.html)
+provides GPU benchmarking utilities and quantile summaries. This repository instead
+retains every event sample so review is not limited to precomputed aggregates.
+The CUDA Runtime
+[event API](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__EVENT.html)
+defines event recording, synchronization, and elapsed-time calculation; it also warns
+that unrelated stream work between events can inflate the observed interval.
 Triton's official
 [debugging guide](https://triton-lang.org/main/programming-guide/chapter-3/debugging.html)
 documents that interpreter mode simulates operations sequentially with NumPy on the
@@ -45,6 +53,31 @@ and environment metadata; `torch.compile` is available as a comparator.
 especially for shapes with little work per launch. The repository treats such a loss
 as a useful result rather than filtering the shape. Interpreter agreement supports
 the operation-level contract but cannot establish GPU code generation or latency.
+CUDA events do not make a shared or contended device exclusive, so device isolation
+and a retained raw distribution remain part of the measurement boundary.
+
+## Reproducibility and report contracts
+
+NVIDIA's
+[`nvidia-smi` documentation](https://docs.nvidia.com/deploy/nvidia-smi/index.html)
+defines selective GPU queries for driver, performance-state, clock, and power fields.
+The [JSON Schema 2020-12 specification](https://json-schema.org/draft/2020-12)
+defines the report-validation dialect, while Python's
+[`importlib.resources` documentation](https://docs.python.org/3.11/library/importlib.resources.html)
+provides installed-package resource access independent of a source checkout.
+
+**Design implication:** schemas ship in the wheel; reports distinguish unavailable
+management data from query errors; publication-mode suites require a clean commit;
+and one command recursively checks the manifest and all child reports.
+
+**Disconfirming evidence:** a valid schema proves structure, not provenance or honest
+measurement. A clean commit does not prove an uncontended GPU. Clock and power queries
+are point observations, not full-run telemetry. Process isolation and randomized order
+reduce two sources of bias but do not eliminate thermal drift, system noise, or
+selection bias. The management documentation also notes that numeric device ordering
+is not stable across reboots; the report's device index is therefore local context,
+not a persistent hardware identity. Independent reproduction and profiler evidence
+remain necessary.
 
 ## Profiling and performance models
 
@@ -79,6 +112,11 @@ PyTorch's official
 [distributed communication documentation](https://docs.pytorch.org/docs/stable/distributed)
 states that default-group collectives require every process to enter the call and
 documents process-group timeouts and coordinated shutdown requirements.
+NVIDIA's maintained
+[`nccl-tests` repository](https://github.com/NVIDIA/nccl-tests)
+provides standard collective correctness and bandwidth comparators across processes,
+threads, and MPI launch configurations, including per-iteration event timing and JSON
+output.
 
 **Design implication:** a ring alpha-beta model and measured all-reduce form a useful
 minimum pair for reasoning about communication volume and critical-path latency. A
@@ -88,6 +126,8 @@ local mismatch does not intentionally desynchronize subsequent collectives.
 **Disconfirming evidence:** NCCL selects algorithms and protocols using actual
 topology; a homogeneous ring formula omits trees, hierarchical routes, contention,
 reduction work, channelization, and overlap. It cannot validate a multi-node design.
+The repository's custom benchmark should be compared with `nccl-tests` before its
+measurements are used to diagnose a communication mechanism.
 
 ## Low precision and tensor cores
 

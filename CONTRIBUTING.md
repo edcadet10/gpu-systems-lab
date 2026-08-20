@@ -36,8 +36,9 @@ x86-64. GPU contributors can install the framework wheel appropriate for their C
 stack, then install `.[dev,gpu]` and run `pytest -m gpu`.
 
 The required quality check runs the full sequence above. The Python-version matrix
-runs the dependency-free models, parsers, metadata helpers, and result-schema tests.
-Neither job presents interpreter execution as target-GPU code generation or timing.
+runs the dependency-free models, parsers, metadata helpers, suite orchestration, and
+report validation. Neither job presents interpreter execution as target-GPU code
+generation or timing.
 
 ## Kernel checklist
 
@@ -53,10 +54,15 @@ Neither job presents interpreter execution as target-GPU code generation or timi
 
 ## Benchmark submissions
 
-Use the benchmark-result issue form. Attach raw JSON from five fresh processes for
-candidate and baseline, plus the exact commands and profiler report summary. Do not
-commit large binary profiler reports; attach them to the issue or an archival release.
-Follow [docs/benchmarking.md](docs/benchmarking.md).
+Use `gpu-lab-rmsnorm-suite` with five process-level runs and validate its manifest with
+`gpu-systems-lab validate-result`. Use the benchmark-result issue form. Submit the
+complete manifest and every referenced raw report for candidate and baseline, plus a
+profiler summary. Do not commit large binary profiler reports; attach them to the issue
+or an archival release. Follow [docs/benchmarking.md](docs/benchmarking.md).
+
+Local data belongs under ignored `results/local/`. Only reviewed, recursively valid
+evidence belongs below `results/published/`; never publish a suite generated with
+`--allow-unversioned`.
 
 ## Pull requests
 

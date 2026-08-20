@@ -1,0 +1,73 @@
+{
+  "benchmark_type": "allreduce",
+  "environment": {
+    "ranks": [
+      {
+        "compute_capability": [9, 0],
+        "cuda_runtime_version": "13.0",
+        "device_index": 0,
+        "device_name": "Example GPU",
+        "driver_version": "600.1",
+        "kernel_release": "6.8.0",
+        "local_rank": 0,
+        "machine": "x86_64",
+        "memory_clock_mhz": 3000.0,
+        "nccl_version": [2, 29, 7],
+        "nvidia_smi_query_status": "ok",
+        "operating_system": "Linux",
+        "performance_state": "P0",
+        "power_limit_watts": 700.0,
+        "python_version": "3.12.3",
+        "pytorch_version": "2.13.0",
+        "rank": 0,
+        "sm_clock_mhz": 1800.0,
+        "total_memory_bytes": 80000000000
+      },
+      {
+        "compute_capability": [9, 0],
+        "cuda_runtime_version": "13.0",
+        "device_index": 1,
+        "device_name": "Example GPU",
+        "driver_version": "600.1",
+        "kernel_release": "6.8.0",
+        "local_rank": 1,
+        "machine": "x86_64",
+        "memory_clock_mhz": 3000.0,
+        "nccl_version": [2, 29, 7],
+        "nvidia_smi_query_status": "ok",
+        "operating_system": "Linux",
+        "performance_state": "P0",
+        "power_limit_watts": 700.0,
+        "python_version": "3.12.3",
+        "pytorch_version": "2.13.0",
+        "rank": 1,
+        "sm_clock_mhz": 1800.0,
+        "total_memory_bytes": 80000000000
+      }
+    ],
+    "world_size": 2
+  },
+  "generated_at": "2026-08-20T12:00:00+00:00",
+  "git_commit": null,
+  "git_dirty": null,
+  "protocol": {
+    "correctness_consensus": "all-rank integer minimum",
+    "measured_iterations": 2,
+    "rank_aggregation": "maximum latency for each measured iteration",
+    "timer": "CUDA events",
+    "warmup_iterations": 10
+  },
+  "result": {
+    "correctness_expected": 2.0,
+    "correctness_observed": 2.0,
+    "critical_path_latency_ms": {
+      "median": 1.05,
+      "observed_maximum": 1.1,
+      "observed_minimum": 1.0,
+      "samples": [1.0, 1.1]
+    },
+    "dtype": "float16",
+    "message_bytes": 134217728
+  },
+  "schema_version": 3
+}

@@ -12,19 +12,29 @@ from pathlib import Path
 from typing import Any
 
 from gpu_systems_lab.benchmark_inputs import element_count, positive_integer
-from gpu_systems_lab.reporting import git_commit
+from gpu_systems_lab.reporting import (
+    git_commit,
+    git_dirty,
+    nvidia_smi_metadata,
+    runtime_metadata,
+)
 
 
-def _metadata(torch: Any, world_size: int) -> dict[str, Any]:
+def _rank_metadata(torch: Any, rank: int, local_rank: int) -> dict[str, Any]:
     index = torch.cuda.current_device()
     properties = torch.cuda.get_device_properties(index)
     return {
-        "world_size": world_size,
+        "rank": rank,
+        "local_rank": local_rank,
+        "device_index": index,
         "device_name": properties.name,
         "compute_capability": list(torch.cuda.get_device_capability(index)),
+        "total_memory_bytes": properties.total_memory,
         "pytorch_version": torch.__version__,
         "cuda_runtime_version": torch.version.cuda,
         "nccl_version": list(torch.cuda.nccl.version()),
+        **runtime_metadata(),
+        **nvidia_smi_metadata(index),
     }
 
 
@@ -60,6 +70,55 @@ def _assert_collective_correctness(
     raise AssertionError(f"all-reduce correctness failed: {detail}")
 
 
+def _build_report(
+    *,
+    rank_environments: list[dict[str, Any]],
+    world_size: int,
+    message_bytes: int,
+    dtype_name: str,
+    observed: float,
+    expected: float,
+    critical_path_samples: list[float],
+    warmup: int,
+    repeats: int,
+    commit: str | None,
+    dirty: bool | None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Build the versioned report independently of distributed execution."""
+
+    return {
+        "schema_version": 3,
+        "benchmark_type": "allreduce",
+        "generated_at": generated_at or datetime.now(timezone.utc).isoformat(),
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "environment": {
+            "world_size": world_size,
+            "ranks": rank_environments,
+        },
+        "protocol": {
+            "timer": "CUDA events",
+            "warmup_iterations": warmup,
+            "measured_iterations": repeats,
+            "rank_aggregation": "maximum latency for each measured iteration",
+            "correctness_consensus": "all-rank integer minimum",
+        },
+        "result": {
+            "message_bytes": message_bytes,
+            "dtype": dtype_name,
+            "correctness_observed": observed,
+            "correctness_expected": expected,
+            "critical_path_latency_ms": {
+                "samples": critical_path_samples,
+                "median": statistics.median(critical_path_samples),
+                "observed_minimum": min(critical_path_samples),
+                "observed_maximum": max(critical_path_samples),
+            },
+        },
+    }
+
+
 def run(
     *,
     message_bytes: int,
@@ -68,6 +127,11 @@ def run(
     repeats: int,
 ) -> dict[str, Any] | None:
     """Run under ``torchrun`` and return a report on rank zero."""
+
+    if warmup < 1 or repeats < 1:
+        raise ValueError("warmup and repeats must be positive")
+    if dtype_name not in ("float16", "bfloat16", "float32"):
+        raise ValueError(f"unsupported dtype: {dtype_name}")
 
     try:
         import torch
@@ -131,40 +195,39 @@ def run(
             end.synchronize()
             local_samples.append(float(start.elapsed_time(end)))
 
-        gathered: list[list[float] | None] | None = (
+        local_payload = {
+            "samples": local_samples,
+            "environment": _rank_metadata(torch, rank, local_rank),
+        }
+        gathered: list[dict[str, Any] | None] | None = (
             [None for _ in range(world_size)] if rank == 0 else None
         )
-        distributed.gather_object(local_samples, gathered, dst=0)
+        distributed.gather_object(local_payload, gathered, dst=0)
         if rank != 0:
             return None
         assert gathered is not None
-        rank_samples = [sample for sample in gathered if sample is not None]
+        rank_payloads = [payload for payload in gathered if payload is not None]
+        if len(rank_payloads) != world_size:
+            raise RuntimeError("rank metadata gather returned an incomplete world")
+        rank_samples = [payload["samples"] for payload in rank_payloads]
+        rank_environments = sorted(
+            (payload["environment"] for payload in rank_payloads),
+            key=lambda environment: environment["rank"],
+        )
         critical_path_samples = [max(values) for values in zip(*rank_samples, strict=True)]
-        return {
-            "schema_version": 2,
-            "benchmark_type": "allreduce",
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "git_commit": git_commit(),
-            "environment": _metadata(torch, world_size),
-            "protocol": {
-                "timer": "CUDA events",
-                "warmup_iterations": warmup,
-                "measured_iterations": repeats,
-                "rank_aggregation": "maximum latency for each measured iteration",
-            },
-            "result": {
-                "message_bytes": message_bytes,
-                "dtype": dtype_name,
-                "correctness_observed": observed,
-                "correctness_expected": expected,
-                "critical_path_latency_ms": {
-                    "samples": critical_path_samples,
-                    "median": statistics.median(critical_path_samples),
-                    "observed_minimum": min(critical_path_samples),
-                    "observed_maximum": max(critical_path_samples),
-                },
-            },
-        }
+        return _build_report(
+            rank_environments=rank_environments,
+            world_size=world_size,
+            message_bytes=message_bytes,
+            dtype_name=dtype_name,
+            observed=observed,
+            expected=expected,
+            critical_path_samples=critical_path_samples,
+            warmup=warmup,
+            repeats=repeats,
+            commit=git_commit(),
+            dirty=git_dirty(),
+        )
     finally:
         distributed.destroy_process_group()
 
@@ -181,20 +244,23 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    report = run(
-        message_bytes=args.message_bytes,
-        dtype_name=args.dtype,
-        warmup=args.warmup,
-        repeats=args.repeats,
-    )
-    if report is None:
-        return 0
-    serialized = json.dumps(report, indent=2, sort_keys=True)
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(serialized + "\n", encoding="utf-8")
-    else:
-        print(serialized)
+    try:
+        report = run(
+            message_bytes=args.message_bytes,
+            dtype_name=args.dtype,
+            warmup=args.warmup,
+            repeats=args.repeats,
+        )
+        if report is None:
+            return 0
+        serialized = json.dumps(report, indent=2, sort_keys=True, allow_nan=False)
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(serialized + "\n", encoding="utf-8")
+        else:
+            print(serialized)
+    except (AssertionError, OSError, RuntimeError, ValueError) as error:
+        raise SystemExit(str(error)) from error
     return 0
 
 

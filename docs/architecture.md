@@ -1,20 +1,27 @@
 # Architecture
 
-The first release is one vertical slice through the performance stack. Its center is
-a fused residual-plus-RMSNorm forward operation; the surrounding components make its
+The project is one vertical slice through the performance stack. Its center is a
+fused residual-plus-RMSNorm forward operation; the surrounding components make its
 correctness, cost assumptions, measurements, and distributed context inspectable.
 
 ```mermaid
 flowchart LR
     Contract[PyTorch numerical contract] --> Gate[Correctness gate]
     Triton[Triton fused kernel] --> Gate
-    Gate --> Bench[CUDA-event benchmark]
-    Bench --> JSON[Raw JSON result]
+    Compiler[Compiled framework baseline] --> Gate
+    Gate --> Child[One-provider child process]
+    Child --> First[First-use observation]
+    Child --> Bench[CUDA-event samples]
+    First --> JSON[Versioned child report]
+    Bench --> JSON
+    Schedule[Randomized five-run schedule] --> Child
+    JSON --> Manifest[Suite manifest]
+    Manifest --> Validate[Recursive validator]
     Triton --> NVTX[NVTX target]
     NVTX --> Nsight[Nsight profiles]
     Traffic[Logical traffic model] --> Review[Claim review]
     Roofline[Roofline model] --> Review
-    JSON --> Review
+    Validate --> Review
     Nsight --> Review
     Ring[Ring alpha-beta model] --> Dist[NCCL measurement]
     Dist --> Review
@@ -54,6 +61,24 @@ algorithms. It does not infer DRAM transactions. The roofline model computes an 
 ceiling from user-supplied peaks. The ring model assumes a homogeneous, contention-free
 ring and excludes reduction-compute cost. Each model is paired with a measurement path
 that can expose where those assumptions fail.
+
+## Measurement and report boundary
+
+The canonical suite owns scheduling and process isolation; the child benchmark owns
+tensor construction, correctness, and timing. A child process receives one provider,
+one dtype, a complete shape grid, and the seed registered for its process-level run.
+The manifest records the deterministic shuffled schedule and relative child paths.
+
+JSON Schema validates each document's shape. The recursive validator adds constraints
+that are relational rather than local: schedule completeness, path confinement,
+canonical replay commands, commit/dirty-state agreement, and matching seeds,
+providers, dtypes, and shapes. Schemas ship inside the wheel so installed tools do not
+depend on a source checkout or network access.
+
+The benchmark reports first-use and steady-state timing separately. First-use uses a
+host clock around a synchronized provider invocation and may include lazy compilation.
+Steady-state samples use CUDA events after warmup. Neither is interchangeable with an
+end-to-end serving latency measurement.
 
 ## Extension points
 

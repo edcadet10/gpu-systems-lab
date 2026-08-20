@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edcadet10/gpu-systems-lab/raw/main/src/gpu_systems_lab/schemas/rmsnorm-v3.schema.json",
+  "title": "Residual plus RMSNorm benchmark report v3",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_type",
+    "generated_at",
+    "git_commit",
+    "git_dirty",
+    "environment",
+    "protocol",
+    "results"
+  ],
+  "properties": {
+    "schema_version": { "const": 3 },
+    "benchmark_type": { "const": "residual_rmsnorm" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "git_commit": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "git_dirty": { "type": ["boolean", "null"] },
+    "environment": {
+      "type": "object",
+      "required": [
+        "device_index",
+        "device_name",
+        "compute_capability",
+        "total_memory_bytes",
+        "python_version",
+        "operating_system",
+        "kernel_release",
+        "machine",
+        "pytorch_version",
+        "triton_version",
+        "cuda_runtime_version",
+        "cudnn_version",
+        "nvidia_smi_query_status",
+        "driver_version",
+        "performance_state",
+        "sm_clock_mhz",
+        "memory_clock_mhz",
+        "power_limit_watts"
+      ],
+      "properties": {
+        "device_index": { "type": "integer", "minimum": 0 },
+        "device_name": { "type": "string", "minLength": 1 },
+        "compute_capability": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "total_memory_bytes": { "type": "integer", "minimum": 1 },
+        "python_version": { "type": "string", "minLength": 1 },
+        "operating_system": { "type": "string", "minLength": 1 },
+        "kernel_release": { "type": "string", "minLength": 1 },
+        "machine": { "type": "string", "minLength": 1 },
+        "pytorch_version": { "type": "string", "minLength": 1 },
+        "triton_version": { "type": "string", "minLength": 1 },
+        "cuda_runtime_version": { "type": ["string", "null"] },
+        "cudnn_version": { "type": ["integer", "null"], "minimum": 1 },
+        "nvidia_smi_query_status": { "enum": ["ok", "unavailable", "error"] },
+        "driver_version": { "type": ["string", "null"] },
+        "performance_state": { "type": ["string", "null"] },
+        "sm_clock_mhz": { "type": ["number", "null"], "minimum": 0 },
+        "memory_clock_mhz": { "type": ["number", "null"], "minimum": 0 },
+        "power_limit_watts": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "timer",
+        "first_call_timer",
+        "warmup_iterations",
+        "measured_iterations",
+        "seed",
+        "epsilon",
+        "provider_order"
+      ],
+      "properties": {
+        "timer": { "const": "CUDA events" },
+        "first_call_timer": { "const": "host wall clock with device synchronization" },
+        "warmup_iterations": { "type": "integer", "minimum": 1 },
+        "measured_iterations": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" },
+        "epsilon": { "type": "number", "exclusiveMinimum": 0 },
+        "provider_order": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["torch_eager", "triton", "torch_compile"] }
+        }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "shape",
+          "dtype",
+          "provider",
+          "correctness",
+          "first_call_latency_ms",
+          "latency_ms"
+        ],
+        "properties": {
+          "shape": {
+            "type": "array",
+            "prefixItems": [
+              { "type": "integer", "minimum": 1 },
+              { "type": "integer", "minimum": 1 }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "dtype": { "enum": ["float16", "bfloat16", "float32"] },
+          "provider": { "enum": ["torch_eager", "triton", "torch_compile"] },
+          "correctness": {
+            "type": "object",
+            "required": ["max_absolute_error", "absolute_tolerance"],
+            "properties": {
+              "max_absolute_error": { "type": "number", "minimum": 0 },
+              "absolute_tolerance": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "first_call_latency_ms": { "type": "number", "minimum": 0 },
+          "latency_ms": {
+            "type": "object",
+            "required": ["samples", "median", "observed_minimum", "observed_maximum"],
+            "properties": {
+              "samples": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "number", "minimum": 0 }
+              },
+              "median": { "type": "number", "minimum": 0 },
+              "observed_minimum": { "type": "number", "minimum": 0 },
+              "observed_maximum": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

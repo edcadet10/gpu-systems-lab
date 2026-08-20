@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from gpu_systems_lab.models import (
     estimate_residual_rmsnorm_traffic,
     estimate_ring_allreduce,
     estimate_roofline,
 )
+from gpu_systems_lab.result_validation import ReportValidationError, validate_result_bundle_path
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -43,11 +46,37 @@ def _parser() -> argparse.ArgumentParser:
         help="one-way decimal gigabytes per second (GB/s)",
     )
     ring.add_argument("--latency-us", type=float, required=True)
+
+    validate = subparsers.add_parser(
+        "validate-result",
+        help="validate a benchmark report against its versioned schema",
+    )
+    validate.add_argument("path", type=Path)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "validate-result":
+        try:
+            validation = validate_result_bundle_path(args.path)
+        except (ReportValidationError, RuntimeError) as error:
+            print(f"invalid report: {error}", file=sys.stderr)
+            return 2
+        print(
+            json.dumps(
+                {
+                    "benchmark_type": validation.benchmark_type,
+                    "schema_file": validation.schema_file,
+                    "schema_version": validation.schema_version,
+                    "valid": True,
+                    "validated_reports": validation.validated_children + 1,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
     if args.command == "traffic":
         result = estimate_residual_rmsnorm_traffic(args.rows, args.hidden, args.element_bytes)
     elif args.command == "roofline":

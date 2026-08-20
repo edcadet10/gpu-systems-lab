@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "gpu-systems-lab"
-version = "0.1.1"
+version = "0.2.0"
 description = "Reproducible experiments in GPU kernels, performance modeling, and collectives"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,7 +28,9 @@ dependencies = []
 
 [project.optional-dependencies]
 torch = ["torch>=2.10,<2.14"]
+reports = ["jsonschema>=4.25,<5"]
 gpu = [
+  "jsonschema>=4.25,<5",
   "numpy>=2,<3",
   "torch>=2.10,<2.14",
   "triton>=3.5,<3.8; sys_platform == 'linux' and platform_machine == 'x86_64'",
@@ -44,6 +46,7 @@ dev = [
 [project.scripts]
 gpu-systems-lab = "gpu_systems_lab.cli:main"
 gpu-lab-rmsnorm = "gpu_systems_lab.benchmarks.residual_rmsnorm:main"
+gpu-lab-rmsnorm-suite = "gpu_systems_lab.benchmark_suite:main"
 gpu-lab-allreduce = "gpu_systems_lab.distributed.benchmark_allreduce:main"
 
 [project.urls]

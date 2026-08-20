@@ -1,5 +1,81 @@
 # Validation records
 
+## v0.2.0 measurement-readiness record
+
+Date: 2026-08-20
+
+Environment: Python 3.12.3, PyTorch 2.13.0+cu130, Triton 3.7.1, NumPy
+2.5.2, Linux x86-64. The host had no NVIDIA driver or GPU.
+
+### Claim and kill criterion
+
+Claim: a clean installed wheel can run the dependency-free models, load its current
+schemas without a source checkout, and reject a structurally or semantically
+incoherent report bundle before that bundle is proposed as evidence.
+
+Reject the claim if a wheel omits a schema; the base install imports a framework
+dependency; non-finite JSON is accepted; or a suite with an incomplete schedule, path
+escape, altered command, mismatched commit/seed/provider/dtype/shape, incorrect timing
+aggregate, wrong sample count, or incomplete collective-rank metadata validates.
+
+### Commands
+
+```bash
+python -m pip check
+ruff check .
+ruff format --check .
+pytest --cov=gpu_systems_lab --cov-report=term-missing
+TRITON_INTERPRET=1 pytest -m triton_interpreter -vv
+python -m build
+gpu-systems-lab validate-result tests/fixtures/valid-rmsnorm-v3.json
+gitleaks detect --no-git --source . --redact --exit-code 1
+```
+
+Two fresh virtual environments also installed the built wheel: one with no optional
+dependencies and one with the `reports` extra. The base environment ran the traffic
+model and returned the documented dependency error for report validation. The reports
+environment loaded the package-shipped schema and validated the fixture. A real suite
+invocation with `--allow-unversioned` exercised the expected no-CUDA failure path.
+
+### Adversarial failures found and repaired
+
+- A schema-valid but unrelated child could initially enter a suite manifest. Recursive
+  validation now checks the complete schedule, confined unique paths, canonical replay
+  commands, provenance, protocol, identities, and shape coverage.
+- An IEEE NaN error could initially bypass a simple greater-than tolerance check.
+  Correctness now requires a finite error, writers prohibit non-standard numeric JSON,
+  and readers reject non-finite tokens and in-memory values.
+- The first real no-GPU orchestration attempt returned a child traceback. Benchmark
+  entry points now return a concise one-line requirement error.
+- The first collective v3 draft recorded only the reporting device. The accepted
+  contract records device and runtime provenance for every global rank and validates
+  complete rank coverage.
+
+### Observations
+
+- Ordinary suite: `119 passed, 2 skipped`; only the CUDA hardware case and separately
+  invoked interpreter case skipped. Hardware-independent branch coverage was 94.50%.
+- Separate Triton interpreter run: `1 passed, 120 deselected`.
+- All three package-shipped Draft 2020-12 schemas passed meta-schema checks; producer
+  builders emitted reports accepted by their current contracts.
+- Tampered bundle, non-finite-number, sample-count, aggregate, and rank-coverage tests
+  all failed at their registered gates.
+- Source and wheel distributions built; clean-wheel base and reports-extra smokes,
+  dependency consistency, lint, formatting, configuration parsing, relative links,
+  external-link reachability, forbidden-name scans, and secret scanning passed.
+- An independent, read-only whole-repository audit found no blocker or high-severity
+  issue. Its regression-coverage and documentation-precision findings were repaired
+  before this record was finalized.
+- `results/published/` contains no measurement data.
+
+### Outcome and boundary
+
+The claim held for the registered local and clean-wheel checks. This record establishes
+measurement readiness, not measurement validity on hardware. It does not establish
+CUDA code generation, target-GPU numerical behavior or latency, physical memory
+traffic, compiler speedup, NCCL performance, topology effects, multi-node behavior, or
+production fault tolerance.
+
 ## v0.1.1 hardening record
 
 Date: 2026-08-20
