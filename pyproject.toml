@@ -1,0 +1,82 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gpu-systems-lab"
+version = "0.1.0"
+description = "Reproducible experiments in GPU kernels, performance modeling, and collectives"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Jeff Cadet" }]
+keywords = ["gpu", "triton", "pytorch", "performance", "distributed-systems"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.optional-dependencies]
+torch = ["torch>=2.10,<2.14"]
+gpu = [
+  "numpy>=2,<3",
+  "torch>=2.10,<2.14",
+  "triton>=3.5,<3.8; sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+dev = [
+  "build>=1.3,<2",
+  "pytest>=8.4,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.12,<1",
+]
+
+[project.scripts]
+gpu-systems-lab = "gpu_systems_lab.cli:main"
+gpu-lab-rmsnorm = "gpu_systems_lab.benchmarks.residual_rmsnorm:main"
+gpu-lab-allreduce = "gpu_systems_lab.distributed.benchmark_allreduce:main"
+
+[project.urls]
+Homepage = "https://github.com/edcadet10/gpu-systems-lab"
+Documentation = "https://github.com/edcadet10/gpu-systems-lab/tree/main/docs"
+Issues = "https://github.com/edcadet10/gpu-systems-lab/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gpu_systems_lab"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["tests"]
+markers = [
+  "gpu: requires a CUDA-capable GPU",
+  "triton_interpreter: runs through the Triton interpreter",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["gpu_systems_lab"]
+omit = [
+  "src/gpu_systems_lab/benchmarks/*",
+  "src/gpu_systems_lab/distributed/benchmark_allreduce.py",
+  "src/gpu_systems_lab/kernels/*",
+  "src/gpu_systems_lab/profiling/*",
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]

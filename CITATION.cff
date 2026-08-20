@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If this laboratory helps your work, cite the repository and exact commit used."
+title: "GPU Systems Lab"
+type: software
+authors:
+  - family-names: Cadet
+    given-names: Jeff
+    alias: edcadet10
+version: 0.1.0
+date-released: 2026-08-20
+license: Apache-2.0
+repository-code: "https://github.com/edcadet10/gpu-systems-lab"
+url: "https://github.com/edcadet10/gpu-systems-lab"

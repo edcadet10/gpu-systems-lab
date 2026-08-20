@@ -1,0 +1,45 @@
+name: Benchmark result
+description: Submit reproducible GPU or collective measurements, including negative results.
+title: "[Result]: "
+labels: [benchmark, needs-review]
+body:
+  - type: checkboxes
+    attributes:
+      label: Required checks
+      options:
+        - label: Correctness passed before timing.
+          required: true
+        - label: I kept all five fresh process-level runs for candidate and baseline.
+          required: true
+        - label: The attached data contains no secrets or private infrastructure details.
+          required: true
+  - type: textarea
+    attributes:
+      label: Claim and pre-registered failure line
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Exact commands
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment and topology
+      description: Commit, GPU, driver, CUDA, software versions, clocks, power, and topology.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Raw result files
+      description: Drag and drop JSON files here; do not paste only summary values.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Profiler evidence and limits
+      description: State what the profile supports and what the sample cannot establish.
+    validations:
+      required: true

@@ -1,0 +1,67 @@
+# Contributing
+
+Thanks for helping make GPU performance work easier to inspect and reproduce. Code,
+benchmark data, issue reports, negative results, documentation, and design critiques
+are all useful contributions.
+
+## Before opening a pull request
+
+1. Search existing issues and discussions. Open a proposal first for a new kernel,
+   dependency, benchmark protocol, or public API.
+2. Keep the change focused. A kernel contribution should include its reference,
+   contract, tests, benchmark target, and documented support boundary together.
+3. Do not include proprietary code, confidential data, model weights, secrets, or
+   benchmark results you are not authorized to publish.
+
+## Development setup
+
+```bash
+git clone https://github.com/edcadet10/gpu-systems-lab.git
+cd gpu-systems-lab
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+ruff check .
+ruff format --check .
+pytest --cov=gpu_systems_lab --cov-report=term-missing
+python -m build
+```
+
+GPU contributors can install `.[dev,gpu]` and run `pytest -m gpu`. CPU CI skips the
+hardware-gated test instead of pretending to validate the accelerated path.
+
+## Kernel checklist
+
+- Write the mathematical and dtype contract before the accelerated implementation.
+- Include awkward shapes, masked tails, zeros, large finite values, and invalid input
+  tests where relevant.
+- State layout, alignment, dtype, compute-capability, and size restrictions explicitly.
+- Reject unsupported autograd behavior; do not silently detach.
+- Compare with a strong baseline and keep losing shapes in the result set.
+- Add an NVTX range or another stable profiler target.
+- Document what result would falsify the proposed optimization.
+
+## Benchmark submissions
+
+Use the benchmark-result issue form. Attach raw JSON from five fresh processes for
+candidate and baseline, plus the exact commands and profiler report summary. Do not
+commit large binary profiler reports; attach them to the issue or an archival release.
+Follow [docs/benchmarking.md](docs/benchmarking.md).
+
+## Pull requests
+
+- Explain the contract and why the change belongs in this repository.
+- Link the issue or discussion.
+- Include tests and update relevant documentation.
+- Complete the claim and falsification fields in the pull request template.
+- Expect review questions about negative cases, numerical behavior, measurement
+  controls, and hardware generalization.
+
+Maintainers may ask to split unrelated changes. A passing test suite is necessary but
+does not itself establish a performance claim.
+
+## Community conduct and licensing
+
+Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). By submitting a
+contribution, you agree that it is licensed under the repository's Apache-2.0 license
+and that you have the right to submit it.

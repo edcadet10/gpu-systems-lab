@@ -1,0 +1,41 @@
+name: Kernel proposal
+description: Propose a new kernel, implementation, compiler path, or hardware experiment.
+title: "[Kernel]: "
+labels: [enhancement, kernel, needs-design]
+body:
+  - type: textarea
+    attributes:
+      label: Numerical contract
+      description: Define inputs, outputs, dtype behavior, gradients, and tolerances.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Workload and hardware boundary
+      description: List representative shapes, layouts, devices, and unsupported cases.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Baselines
+      description: Name the strongest available framework, compiler, or library comparators.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Claim and kill criterion
+      description: What do you expect, and what one observation would make that false?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Cheapest falsifying test
+      description: Pre-register the smallest correctness and performance experiment.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Primary sources
+      description: Link official documentation, standards, code, or original papers.
+    validations:
+      required: true

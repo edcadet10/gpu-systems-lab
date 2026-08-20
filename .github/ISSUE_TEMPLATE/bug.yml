@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible correctness, build, model, or documentation defect.
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: checkboxes
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched open and closed issues for this problem.
+          required: true
+        - label: I removed secrets and private host or model information.
+          required: true
+  - type: textarea
+    attributes:
+      label: Observed behavior
+      description: What happened? Include the complete error and the smallest reproducer.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected contract
+      description: What documented or tested behavior did you expect?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment
+      description: Commit, OS, Python, GPU, driver, CUDA, framework, and Triton versions.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction command
+      render: shell
+    validations:
+      required: true
