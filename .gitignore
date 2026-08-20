@@ -11,4 +11,4 @@ artifacts/
 *.ncu-rep
 *.nsys-rep
 results/*.json
-!results/example.schema.json
+!results/*.schema.json

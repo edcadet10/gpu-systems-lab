@@ -11,12 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
-def _positive_integer(value: str) -> int:
-    parsed = int(value)
-    if parsed <= 0:
-        raise argparse.ArgumentTypeError("expected a positive integer")
-    return parsed
+from gpu_systems_lab.benchmark_inputs import element_count, positive_integer
+from gpu_systems_lab.reporting import git_commit
 
 
 def _metadata(torch: Any, world_size: int) -> dict[str, Any]:
@@ -35,6 +31,33 @@ def _metadata(torch: Any, world_size: int) -> dict[str, Any]:
 def _allreduce_once(distributed: Any, tensor: Any) -> None:
     tensor.fill_(1)
     distributed.all_reduce(tensor)
+
+
+def _assert_collective_correctness(
+    torch: Any,
+    distributed: Any,
+    *,
+    observed: float,
+    expected: float,
+    device: Any,
+    rank: int,
+) -> None:
+    """Make every rank agree that correctness passed before any rank raises."""
+
+    local_ok = observed == expected
+    all_ranks_ok = torch.tensor(
+        1 if local_ok else 0,
+        dtype=torch.int32,
+        device=device,
+    )
+    distributed.all_reduce(all_ranks_ok, op=distributed.ReduceOp.MIN)
+    if int(all_ranks_ok.item()) == 1:
+        return
+    if local_ok:
+        detail = f"rank {rank} matched locally, but at least one peer rank failed"
+    else:
+        detail = f"rank {rank} observed {observed}, expected {expected}"
+    raise AssertionError(f"all-reduce correctness failed: {detail}")
 
 
 def run(
@@ -70,12 +93,13 @@ def run(
         dtype_name
     ]
     element_size = torch.empty((), dtype=dtype).element_size()
-    element_count = message_bytes // element_size
-    if element_count == 0 or element_count * element_size != message_bytes:
+    try:
+        number_of_elements = element_count(message_bytes, element_size)
+    except ValueError:
         distributed.destroy_process_group()
-        raise ValueError("message bytes must be a positive multiple of the dtype size")
+        raise
 
-    tensor = torch.ones(element_count, device="cuda", dtype=dtype)
+    tensor = torch.ones(number_of_elements, device="cuda", dtype=dtype)
     try:
         for _ in range(warmup):
             _allreduce_once(distributed, tensor)
@@ -85,10 +109,14 @@ def run(
         _allreduce_once(distributed, tensor)
         torch.cuda.synchronize()
         observed = float(tensor[0])
-        if observed != expected:
-            raise AssertionError(
-                f"all-reduce correctness failed: observed {observed}, expected {expected}"
-            )
+        _assert_collective_correctness(
+            torch,
+            distributed,
+            observed=observed,
+            expected=expected,
+            device=tensor.device,
+            rank=rank,
+        )
 
         local_samples: list[float] = []
         for _ in range(repeats):
@@ -113,8 +141,10 @@ def run(
         rank_samples = [sample for sample in gathered if sample is not None]
         critical_path_samples = [max(values) for values in zip(*rank_samples, strict=True)]
         return {
-            "schema_version": 1,
+            "schema_version": 2,
+            "benchmark_type": "allreduce",
             "generated_at": datetime.now(timezone.utc).isoformat(),
+            "git_commit": git_commit(),
             "environment": _metadata(torch, world_size),
             "protocol": {
                 "timer": "CUDA events",
@@ -141,10 +171,10 @@ def run(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--message-bytes", type=_positive_integer, default=128 * 1024 * 1024)
+    parser.add_argument("--message-bytes", type=positive_integer, default=128 * 1024 * 1024)
     parser.add_argument("--dtype", choices=("float16", "bfloat16", "float32"), default="float16")
-    parser.add_argument("--warmup", type=_positive_integer, default=10)
-    parser.add_argument("--repeats", type=_positive_integer, default=50)
+    parser.add_argument("--warmup", type=positive_integer, default=10)
+    parser.add_argument("--repeats", type=positive_integer, default=50)
     parser.add_argument("--output", type=Path)
     return parser
 

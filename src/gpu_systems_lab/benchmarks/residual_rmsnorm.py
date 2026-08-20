@@ -5,17 +5,18 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
-import subprocess
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 from functools import partial
 from pathlib import Path
 from typing import Any
 
+from gpu_systems_lab.benchmark_inputs import positive_integer_list
 from gpu_systems_lab.kernels.residual_rmsnorm import (
     residual_rmsnorm_reference,
     residual_rmsnorm_triton,
 )
+from gpu_systems_lab.reporting import git_commit
 
 
 def _frameworks() -> tuple[Any, Any]:
@@ -27,23 +28,6 @@ def _frameworks() -> tuple[Any, Any]:
     if not torch.cuda.is_available():
         raise RuntimeError("a CUDA-capable GPU is required for this benchmark")
     return torch, triton
-
-
-def _git_commit() -> str | None:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip() if result.returncode == 0 else None
-
-
-def _parse_positive_integers(value: str) -> list[int]:
-    parsed = [int(item.strip()) for item in value.split(",")]
-    if not parsed or any(item <= 0 for item in parsed):
-        raise argparse.ArgumentTypeError("expected a comma-separated list of positive integers")
-    return parsed
 
 
 def _time_cuda(torch: Any, function: Callable[[], Any], warmup: int, repeats: int) -> list[float]:
@@ -154,9 +138,10 @@ def run_benchmark(
                 )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "benchmark_type": "residual_rmsnorm",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "git_commit": _git_commit(),
+        "git_commit": git_commit(),
         "environment": _device_metadata(torch, triton),
         "protocol": {
             "timer": "CUDA events",
@@ -171,8 +156,8 @@ def run_benchmark(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rows", type=_parse_positive_integers, default=[128, 1024])
-    parser.add_argument("--hidden", type=_parse_positive_integers, default=[1024, 4096, 8192])
+    parser.add_argument("--rows", type=positive_integer_list, default=[128, 1024])
+    parser.add_argument("--hidden", type=positive_integer_list, default=[1024, 4096, 8192])
     parser.add_argument("--dtype", choices=("float16", "bfloat16", "float32"), default="float16")
     parser.add_argument(
         "--providers",

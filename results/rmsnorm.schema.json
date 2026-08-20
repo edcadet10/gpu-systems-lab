@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edcadet10/gpu-systems-lab/raw/main/results/rmsnorm.schema.json",
+  "title": "Residual plus RMSNorm benchmark report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_type",
+    "generated_at",
+    "git_commit",
+    "environment",
+    "protocol",
+    "results"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "benchmark_type": { "const": "residual_rmsnorm" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "git_commit": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+    "environment": {
+      "type": "object",
+      "required": [
+        "device_name",
+        "compute_capability",
+        "total_memory_bytes",
+        "pytorch_version",
+        "triton_version",
+        "cuda_runtime_version",
+        "cudnn_version"
+      ],
+      "properties": {
+        "device_name": { "type": "string", "minLength": 1 },
+        "compute_capability": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "integer", "minimum": 0 }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "total_memory_bytes": { "type": "integer", "minimum": 1 },
+        "pytorch_version": { "type": "string", "minLength": 1 },
+        "triton_version": { "type": "string", "minLength": 1 },
+        "cuda_runtime_version": { "type": ["string", "null"] },
+        "cudnn_version": { "type": ["integer", "null"], "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "timer",
+        "warmup_iterations",
+        "measured_iterations",
+        "seed",
+        "epsilon"
+      ],
+      "properties": {
+        "timer": { "const": "CUDA events" },
+        "warmup_iterations": { "type": "integer", "minimum": 1 },
+        "measured_iterations": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" },
+        "epsilon": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["shape", "dtype", "provider", "correctness", "latency_ms"],
+        "properties": {
+          "shape": {
+            "type": "array",
+            "prefixItems": [
+              { "type": "integer", "minimum": 1 },
+              { "type": "integer", "minimum": 1 }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "dtype": { "enum": ["float16", "bfloat16", "float32"] },
+          "provider": { "enum": ["torch_eager", "triton", "torch_compile"] },
+          "correctness": {
+            "type": "object",
+            "required": ["max_absolute_error", "absolute_tolerance"],
+            "properties": {
+              "max_absolute_error": { "type": "number", "minimum": 0 },
+              "absolute_tolerance": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "latency_ms": {
+            "type": "object",
+            "required": ["samples", "median", "observed_minimum", "observed_maximum"],
+            "properties": {
+              "samples": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "number", "minimum": 0 }
+              },
+              "median": { "type": "number", "minimum": 0 },
+              "observed_minimum": { "type": "number", "minimum": 0 },
+              "observed_maximum": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -33,13 +33,18 @@ small; a structured operator becomes justified when tensor-subclass, export, or 
 dispatcher behavior is added. PyTorch's
 [benchmark utility documentation](https://docs.pytorch.org/docs/stable/benchmark_utils.html)
 calls out warmups, accelerator synchronization, and replicate variation.
+Triton's official
+[debugging guide](https://triton-lang.org/main/programming-guide/chapter-3/debugging.html)
+documents that interpreter mode simulates operations sequentially with NumPy on the
+CPU and bypasses target compilation.
 
 **Design implication:** correctness runs before timing; the output retains raw samples
 and environment metadata; `torch.compile` is available as a comparator.
 
 **Disconfirming evidence:** custom kernels can lose to compiled or vendor operations,
 especially for shapes with little work per launch. The repository treats such a loss
-as a useful result rather than filtering the shape.
+as a useful result rather than filtering the shape. Interpreter agreement supports
+the operation-level contract but cannot establish GPU code generation or latency.
 
 ## Profiling and performance models
 
@@ -70,9 +75,15 @@ shows how tensor parallelism places targeted collectives around transformer laye
 The maintained
 [parallelism guide](https://docs.nvidia.com/megatron-core/developer-guide/latest/user-guide/parallelism-guide.html)
 describes tensor, pipeline, context, and data parallel choices.
+PyTorch's official
+[distributed communication documentation](https://docs.pytorch.org/docs/stable/distributed)
+states that default-group collectives require every process to enter the call and
+documents process-group timeouts and coordinated shutdown requirements.
 
 **Design implication:** a ring alpha-beta model and measured all-reduce form a useful
-minimum pair for reasoning about communication volume and critical-path latency.
+minimum pair for reasoning about communication volume and critical-path latency. A
+numerical correctness decision is reduced across ranks before any rank raises, so a
+local mismatch does not intentionally desynchronize subsequent collectives.
 
 **Disconfirming evidence:** NCCL selects algorithms and protocols using actual
 topology; a homogeneous ring formula omits trees, hierarchical routes, contention,

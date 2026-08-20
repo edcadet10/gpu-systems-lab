@@ -20,6 +20,15 @@ Releases use semantic versioning for the Python API. Benchmark data is additiona
 tied to a commit, environment, shape, and protocol; a package version does not make
 measurements portable across hardware.
 
+## Protected branch operations
+
+Changes normally reach `main` through a pull request after all required checks pass.
+External contributions also require maintainer review. Because the repository has one
+maintainer and a pull-request author cannot approve their own change, administrator
+bypass remains available for maintainer-authored release and recovery work. It is used
+only after required checks pass, and the bypass is identified in the pull request or
+release record so the exception is reviewable.
+
 ## Becoming a maintainer
 
 Sustained contributors may be invited to maintain an area after multiple reviewed

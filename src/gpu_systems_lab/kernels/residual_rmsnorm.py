@@ -10,7 +10,12 @@ from __future__ import annotations
 
 import math
 import os
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from torch import Tensor
+else:
+    Tensor = Any
 
 try:
     import torch
@@ -60,7 +65,12 @@ def _require_torch() -> Any:
     return torch
 
 
-def _validate_common(input_tensor: Any, residual: Any, weight: Any, epsilon: float) -> None:
+def _validate_common(
+    input_tensor: Tensor,
+    residual: Tensor,
+    weight: Tensor,
+    epsilon: float,
+) -> None:
     framework = _require_torch()
     if not all(isinstance(tensor, framework.Tensor) for tensor in (input_tensor, residual, weight)):
         raise TypeError("input_tensor, residual, and weight must be PyTorch tensors")
@@ -83,11 +93,11 @@ def _validate_common(input_tensor: Any, residual: Any, weight: Any, epsilon: flo
 
 
 def residual_rmsnorm_reference(
-    input_tensor: Any,
-    residual: Any,
-    weight: Any,
+    input_tensor: Tensor,
+    residual: Tensor,
+    weight: Tensor,
     epsilon: float = 1e-6,
-) -> Any:
+) -> Tensor:
     """PyTorch reference with FP32 residual addition and normalization."""
 
     _validate_common(input_tensor, residual, weight, epsilon)
@@ -100,7 +110,7 @@ def _interpreter_enabled() -> bool:
     return os.environ.get("TRITON_INTERPRET", "0") == "1"
 
 
-def _triton_eligible(input_tensor: Any, residual: Any, weight: Any) -> bool:
+def _triton_eligible(input_tensor: Tensor, residual: Tensor, weight: Tensor) -> bool:
     framework = _require_torch()
     supported_dtype = input_tensor.dtype in (
         framework.float16,
@@ -120,11 +130,11 @@ def _triton_eligible(input_tensor: Any, residual: Any, weight: Any) -> bool:
 
 
 def residual_rmsnorm_triton(
-    input_tensor: Any,
-    residual: Any,
-    weight: Any,
+    input_tensor: Tensor,
+    residual: Tensor,
+    weight: Tensor,
     epsilon: float = 1e-6,
-) -> Any:
+) -> Tensor:
     """Launch the forward Triton kernel or fail with an explicit contract error."""
 
     _validate_common(input_tensor, residual, weight, epsilon)
@@ -165,13 +175,13 @@ def residual_rmsnorm_triton(
 
 
 def residual_rmsnorm(
-    input_tensor: Any,
-    residual: Any,
-    weight: Any,
+    input_tensor: Tensor,
+    residual: Tensor,
+    weight: Tensor,
     epsilon: float = 1e-6,
     *,
     implementation: Literal["auto", "reference", "triton"] = "auto",
-) -> Any:
+) -> Tensor:
     """Dispatch to Triton when eligible, otherwise preserve reference semantics."""
 
     _validate_common(input_tensor, residual, weight, epsilon)

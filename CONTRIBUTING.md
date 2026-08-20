@@ -20,15 +20,24 @@ git clone https://github.com/edcadet10/gpu-systems-lab.git
 cd gpu-systems-lab
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install 'torch>=2.10,<2.14' \
+  --index-url https://download.pytorch.org/whl/cpu
+python -m pip install -e '.[dev,gpu]'
 ruff check .
 ruff format --check .
 pytest --cov=gpu_systems_lab --cov-report=term-missing
+TRITON_INTERPRET=1 pytest -m triton_interpreter -vv
 python -m build
 ```
 
-GPU contributors can install `.[dev,gpu]` and run `pytest -m gpu`. CPU CI skips the
-hardware-gated test instead of pretending to validate the accelerated path.
+The explicit CPU wheel keeps this setup usable without an NVIDIA driver while still
+exercising the PyTorch reference, autograd behavior, and Triton interpreter on Linux
+x86-64. GPU contributors can install the framework wheel appropriate for their CUDA
+stack, then install `.[dev,gpu]` and run `pytest -m gpu`.
+
+The required quality check runs the full sequence above. The Python-version matrix
+runs the dependency-free models, parsers, metadata helpers, and result-schema tests.
+Neither job presents interpreter execution as target-GPU code generation or timing.
 
 ## Kernel checklist
 
@@ -40,6 +49,7 @@ hardware-gated test instead of pretending to validate the accelerated path.
 - Compare with a strong baseline and keep losing shapes in the result set.
 - Add an NVTX range or another stable profiler target.
 - Document what result would falsify the proposed optimization.
+- Run the Triton interpreter test and, when hardware is available, the GPU marker.
 
 ## Benchmark submissions
 
