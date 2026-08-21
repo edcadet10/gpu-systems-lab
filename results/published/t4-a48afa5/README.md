@@ -87,12 +87,10 @@ and the run records exact driver and NCCL binary digests.
 | [v3](attempts/v3/) | Exact NCCL linkage succeeded; stripped driver search path stopped upstream device discovery | Complete RMSNorm/project data, linker proof, partial upstream JSON, failure |
 | [v4](raw/) | Completed | Complete successful bundle |
 
-The [v1](https://github.com/edcadet10/gpu-systems-lab/pull/9#issuecomment-5364565979),
-[v2](https://github.com/edcadet10/gpu-systems-lab/pull/9#issuecomment-5364687429),
-and [v3](https://github.com/edcadet10/gpu-systems-lab/pull/9#issuecomment-5364763641)
-failures were publicly recorded before the next repair. Each repair changed allocation
-or runner infrastructure only; the registered benchmark grids and iteration counts
-did not change.
+The retained [v1](attempts/v1/), [v2](attempts/v2/), and [v3](attempts/v3/)
+bundles record each failure before the next repair. Each repair changed allocation or
+runner infrastructure only; the registered benchmark grids and iteration counts did
+not change.
 
 ## Verify
 

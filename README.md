@@ -5,58 +5,96 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**An evidence-first GPU performance study: one transformer primitive traced from
-its numerical contract through kernel fusion, compiler comparison, reproducible
-measurement, profiling, performance models, and collective communication.**
+> **In one sentence:** this project combines one AI-model operation into a custom GPU
+> kernel, then publishes the tests and measurements needed to check whether it is
+> correct and faster.
 
-This public laboratory is built for inspection and extension. Every optimization
-starts with a reference, every timed path passes correctness first, every result
-records its environment, and every performance statement needs a test that could
-prove it wrong.
-
-[Evidence](#evidence-status) · [Quick start](#quick-start) ·
+[What it is](#what-this-project-is) · [Results](#results-in-plain-english) ·
+[Try it](#try-it-without-a-gpu) ·
 [GPU experiment](#run-the-gpu-experiment) · [Profiling](#profile-the-kernel) ·
-[Distributed](#exercise-the-collective-path) · [Results](results/README.md) ·
+[Multi-GPU](#test-communication-between-gpus) · [Evidence files](results/README.md) ·
 [Research](docs/research.md) · [Contribute](CONTRIBUTING.md)
 
-## Evidence status
+## What this project is
 
-| Evidence level | What is present | What it establishes |
+AI models perform long chains of mathematical operations. Each operation may require
+the computer to send a small program, called a **kernel**, to the GPU. Sending many
+separate kernels creates extra work and can move the same data more times than
+necessary.
+
+This project focuses on one representative AI operation: adding a residual connection
+(reusing information from an earlier step) and applying RMSNorm, a normalization step
+used inside transformer-style models. It contains two versions:
+
+- a normal version built from standard framework operations; and
+- a custom GPU version that combines the work into one kernel.
+
+On the traced P100 test, the normal version made eleven GPU launches per operation.
+The custom version made one. In simple terms, the normal version made eleven separate
+trips to complete the task, while the custom version completed it in one trip.
+
+The repository does more than show optimized code. It checks that the custom answer
+is still correct, measures both versions on real GPUs, records the raw results, uses a
+profiler to investigate why the result changed, and keeps failed experiments instead
+of hiding them.
+
+## What this project is useful for
+
+- **An auditable performance study:** readers can inspect the raw measurements,
+  profiler evidence, environment details, and failed attempts.
+- **A learning resource:** readers can follow one optimization from ordinary code to
+  a custom GPU kernel, benchmark, profiler trace, and final conclusion.
+- **A reusable test laboratory:** contributors can add another GPU, kernel, data type,
+  or experiment without inventing a new measurement format.
+- **A starting point for deeper work:** future experiments can cover attention,
+  lower-precision formats, backward passes, multi-node communication, and inference
+  serving.
+
+## What this project is not
+
+This is not an AI model, chatbot, or complete production serving system. It does not
+claim to reproduce a cluster with thousands of GPUs. It is a focused laboratory that
+records one complete optimization experiment and the evidence needed to check its
+conclusions.
+
+## Results in plain English
+
+The hardware tests used two data-center GPU models: P100 and T4.
+
+| Question | What happened | What that means |
 | --- | --- | --- |
-| Hosted CI | Dependency-free core on Python 3.10–3.14; PyTorch reference/autograd and Triton interpreter on Python 3.12; package and schema checks | CPU logic, operation semantics, packaging, and report-contract behavior |
-| Measurement controls | Fresh-process provider isolation, randomized run schedule, first-use and steady-state timing, environment capture, recursive bundle validation | A reproducible protocol ready to collect reviewable GPU evidence |
-| P100 hardware | [Complete FP16 candidate bundle](results/published/p100-a48afa5/) from five fresh processes, 30 paired shape/run decisions, raw samples, correctness witnesses, and environment logs | The registered CUDA-extension timing claim held on this exact grid and stack; reduction ranges were 58.8%–76.6% |
-| T4 hardware | [Complete FP16 candidate bundle](results/published/t4-a48afa5/) with 30 paired decisions, dual-device topology, a project collective, a pinned upstream diagnostic, and three retained failed attempts | The RMSNorm claim held at 72.6%–83.1%; the project element-zero witness and upstream `nwrong=0` checks held, but differing process models prohibit a speed/agreement claim |
-| P100 trace | [Compatibility-pinned Systems evidence](results/published/p100-a48afa5/profiler/) correlates 20 candidate and 220 eager launches inside the exact 20-operation NVTX ranges | Supports one-versus-eleven launch fusion on the traced shape; no bandwidth, roofline, occupancy, or tensor-core claim |
+| Did the optimized code still give acceptable answers? | Yes, in every registered P100 and T4 test. | The optimization passed the predefined correctness rule on the tested inputs. |
+| Did it reduce runtime? | Yes, in all 30 P100 comparisons and all 30 T4 comparisons. | On these GPU models and test sizes, measured latency fell by 58.8%–76.6% on P100 and 72.6%–83.1% on T4. |
+| Why did it improve? | The traced case used one custom GPU launch instead of eleven standard launches. | The trace supports the explanation that combining the work removed launch and intermediate-operation overhead. |
+| Was multi-GPU communication tested? | Yes, on two T4 GPUs. | The experiment produced useful measurements, but two tools used different setups, so the project does not claim that one was faster. |
+| Can someone inspect the evidence? | Yes. Raw timing samples, environments, checksums, failed attempts, and privacy-filtered traces are public. | Reviewers can recalculate the result or submit a counterexample. |
 
-Both hardware claims are intentionally narrow: FP16 forward-only residual-RMSNorm,
-six registered shapes, one device at a time, eager composition as the baseline, and
-the retained steady-state protocol. Worst error-to-allowance ratios were 0.9708 on
-P100 and 0.9689 on T4 against a failure boundary of 1.0. These are not claims about
-other devices, dtypes, backward execution, end-to-end serving, or the kernel's
-mechanism. The [published-result registry](results/published/README.md) separates
-those states.
+The results are deliberately limited to the recorded FP16 (16-bit number format)
+forward operation, six input sizes, and the exact P100 and T4 environments in the
+evidence bundles. They do not prove that the kernel will win on every GPU, data type,
+model, or future run. The [P100 evidence](results/published/p100-a48afa5/),
+[T4 evidence](results/published/t4-a48afa5/), and
+[result registry](results/published/README.md) contain the exact boundaries.
 
-## The vertical slice
+## What is inside the repository
 
-The current package implements forward-only fused residual addition plus RMSNorm and
-connects it to the surrounding systems work:
+| Part | Plain-English purpose |
+| --- | --- |
+| Reference implementation | Defines the answer that optimized code must match. |
+| Custom GPU implementations (CUDA and Triton) | Runs the operation directly on the GPU. |
+| Benchmark runner | Checks correctness first, then records repeatable timing samples. |
+| Profiler tools | Shows which GPU kernels ran inside the measured operation. |
+| Multi-GPU experiment | Measures an all-reduce—a standard operation that combines data across GPUs—at the slowest participating GPU. |
+| Performance calculators | Explores idealized data-movement, hardware-limit, and communication estimates without pretending they are measurements. |
+| Published evidence | Preserves successful runs, failed attempts, machine details, and checksums. |
 
-| Layer | Shipped artifact | Explicit boundary |
-| --- | --- | --- |
-| Numerical contract | Differentiable PyTorch reference with FP32 reduction math | Accelerated path rejects autograd |
-| Kernels | CUDA FP16 block/warp reduction; Triton row reduction with masking and launch heuristics | Both are forward-only; CUDA needs a local toolkit, Triton 3.5+ needs compute capability 8.0+ |
-| Framework | Safe automatic dispatch and optional `torch.compile` comparator | Direct launch, not yet a structured custom operator |
-| Measurement | Correctness gate, isolated process runs, raw CUDA-event samples, first-use timing, environment/driver state, commit capture, recursive validation | Results apply only to the recorded device and protocol |
-| Modeling | Logical traffic, roofline, and alpha-beta ring calculators | Models expose assumptions; they are not hardware counters or NCCL simulators |
-| Distributed | `torchrun`/NCCL benchmark with cross-rank correctness consensus and critical-rank timing | Requires at least two CUDA devices |
+See the [architecture note](docs/architecture.md) for the technical data flow and the
+[validation record](docs/validation.md) for the complete test history.
 
-See the [architecture note](docs/architecture.md) for the contract and data flow, and
-the [validation record](docs/validation.md) for exact observations and limits.
+## Try it without a GPU
 
-## Quick start
-
-### Explore the dependency-free models
+These commands install simple calculators for estimating data movement, hardware
+limits, and multi-GPU communication. They do not reproduce the real GPU measurements.
 
 ```bash
 git clone https://github.com/edcadet10/gpu-systems-lab.git
@@ -77,9 +115,10 @@ gpu-systems-lab ring \
 The commands print structured JSON with units and the assumptions needed to interpret
 it. They do not require PyTorch, Triton, CUDA, or a GPU.
 
-### Reproduce the full CPU and interpreter checks
+### Run the automated developer checks
 
-On Linux x86-64:
+On Linux x86-64, these commands check the package, reference math, and a CPU simulation
+of the custom Triton implementation:
 
 ```bash
 python -m pip install 'torch>=2.10,<2.14' \
@@ -204,7 +243,7 @@ The analyzer opens SQLite read-only, requires exactly one matching range, and jo
 CUDA runtime launch calls on that range's thread to kernel activities by correlation
 ID. It reports a SHA-256 binding to the input export.
 
-## Exercise the collective path
+## Test communication between GPUs
 
 Run one process per GPU:
 
