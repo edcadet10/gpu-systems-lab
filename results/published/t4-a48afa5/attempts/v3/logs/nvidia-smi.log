@@ -1,0 +1,3 @@
+index, name, driver_version, pstate, clocks.current.sm [MHz], clocks.current.memory [MHz], power.limit [W], memory.total [MiB]
+0, Tesla T4, 580.159.04, P8, 300 MHz, 405 MHz, 70.00 W, 15360 MiB
+1, Tesla T4, 580.159.04, P8, 300 MHz, 405 MHz, 70.00 W, 15360 MiB

@@ -1,0 +1,73 @@
+{
+  "benchmark_type": "residual_rmsnorm",
+  "environment": {
+    "compute_capability": [
+      9,
+      0
+    ],
+    "cuda_runtime_version": "13.0",
+    "cuda_arch_list": "9.0",
+    "cuda_compiler_version": "Cuda compilation tools, release 13.0, V13.0.88",
+    "cudnn_version": 99999,
+    "device_index": 0,
+    "device_name": "Example GPU",
+    "driver_version": "600.1",
+    "kernel_release": "6.8.0",
+    "machine": "x86_64",
+    "memory_clock_mhz": 3000,
+    "nvidia_smi_query_status": "ok",
+    "operating_system": "Linux",
+    "performance_state": "P0",
+    "power_limit_watts": 700,
+    "python_version": "3.12.3",
+    "pytorch_version": "2.13.0",
+    "sm_clock_mhz": 1800,
+    "total_memory_bytes": 80000000000,
+    "triton_version": "3.7.1"
+  },
+  "generated_at": "2026-08-20T12:00:00+00:00",
+  "git_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "git_dirty": false,
+  "protocol": {
+    "epsilon": 0.000001,
+    "first_call_timer": "host wall clock with device synchronization",
+    "measured_iterations": 2,
+    "provider_order": [
+      "cuda_extension"
+    ],
+    "seed": 17,
+    "timer": "CUDA events",
+    "warmup_iterations": 25
+  },
+  "results": [
+    {
+      "correctness": {
+        "absolute_tolerance": 0.00001,
+        "comparison": "abs(actual - expected) <= atol + rtol * abs(expected)",
+        "max_absolute_error": 0.001,
+        "max_absolute_error_reference_magnitude": 2.0,
+        "max_error_ratio": 0.4975124378109453,
+        "max_error_ratio_absolute_error": 0.001,
+        "max_error_ratio_reference_magnitude": 2.0,
+        "relative_tolerance": 0.001
+      },
+      "dtype": "float16",
+      "first_call_latency_ms": 120,
+      "latency_ms": {
+        "median": 0.105,
+        "observed_maximum": 0.11,
+        "observed_minimum": 0.1,
+        "samples": [
+          0.1,
+          0.11
+        ]
+      },
+      "provider": "cuda_extension",
+      "shape": [
+        128,
+        4096
+      ]
+    }
+  ],
+  "schema_version": 5
+}

@@ -68,7 +68,7 @@ def test_suite_runs_each_provider_in_a_fresh_process(
     def fake_runner(command: list[str], **kwargs: Any) -> SimpleNamespace:
         commands.append(command)
         output = Path(_argument(command, "--output"))
-        report = json.loads((FIXTURES / "valid-rmsnorm-v3.json").read_text(encoding="utf-8"))
+        report = json.loads((FIXTURES / "valid-rmsnorm-v5.json").read_text(encoding="utf-8"))
         report["protocol"].update(
             {
                 "provider_order": [_argument(command, "--providers")],
@@ -119,6 +119,7 @@ def test_suite_runs_each_provider_in_a_fresh_process(
     assert len({command[command.index("--output") + 1] for command in commands}) == 4
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert len(manifest["reports"]) == 4
+    assert manifest["schema_version"] == 3
     assert manifest["protocol"]["provider_isolation"] == "one provider per fresh Python process"
     assert {report["run_index"] for report in manifest["reports"]} == {1, 2}
 
@@ -132,10 +133,8 @@ def test_suite_rejects_valid_but_unrelated_child_report(
 
     def fake_runner(command: list[str], **kwargs: Any) -> SimpleNamespace:
         output = Path(_argument(command, "--output"))
-        output.write_text(
-            (FIXTURES / "valid-rmsnorm-v3.json").read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
+        report = json.loads((FIXTURES / "valid-rmsnorm-v5.json").read_text(encoding="utf-8"))
+        output.write_text(json.dumps(report), encoding="utf-8")
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     with pytest.raises(SuiteRunError, match="provider_order mismatch"):
@@ -228,6 +227,24 @@ def test_suite_rejects_invalid_measurement_inputs(
 
     with pytest.raises(ValueError):
         run_suite(**arguments)
+
+
+def test_suite_rejects_non_fp16_cuda_extension_schedule(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="CUDA extension provider supports float16"):
+        run_suite(
+            rows=[2],
+            hidden_sizes=[17],
+            dtypes=["bfloat16"],
+            providers=["cuda_extension"],
+            process_runs=1,
+            warmup=1,
+            repeats=1,
+            base_seed=17,
+            epsilon=1e-6,
+            schedule_seed=1,
+            output_dir=tmp_path / "suite",
+            allow_unversioned=True,
+        )
 
 
 def test_suite_refuses_existing_output_directory(tmp_path: Path) -> None:

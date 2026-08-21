@@ -7,6 +7,7 @@ correctness, cost assumptions, measurements, and distributed context inspectable
 ```mermaid
 flowchart LR
     Contract[PyTorch numerical contract] --> Gate[Correctness gate]
+    CUDA[CUDA fused kernel] --> Gate
     Triton[Triton fused kernel] --> Gate
     Compiler[Compiled framework baseline] --> Gate
     Gate --> Child[One-provider child process]
@@ -17,7 +18,8 @@ flowchart LR
     Schedule[Randomized five-run schedule] --> Child
     JSON --> Manifest[Suite manifest]
     Manifest --> Validate[Recursive validator]
-    Triton --> NVTX[NVTX target]
+    CUDA --> NVTX[NVTX target]
+    Triton --> NVTX
     NVTX --> Nsight[Nsight profiles]
     Traffic[Logical traffic model] --> Review[Claim review]
     Roofline[Roofline model] --> Review
@@ -37,10 +39,21 @@ s = fp32(x) + fp32(r)
 y = cast_input_dtype(s * rsqrt(mean(s * s) + e) * fp32(w))
 ```
 
-The reference is differentiable. The Triton implementation is explicitly forward
-only; it rejects tensors requiring gradients instead of silently returning an
-incorrect training graph. Automatic dispatch falls back to the reference when the
-device, dtype, layout, size, or gradient contract is not supported.
+Output agreement is scale-aware: every finite element must satisfy
+`abs(actual - expected) <= atol + rtol * abs(expected)` using the framework's
+documented defaults for its dtype. Reports retain the maximum absolute error, the
+maximum ratio to that per-element allowance, and compact reference/error witnesses so
+the offline validator can recompute both summaries. Historical absolute-only report
+versions remain valid as records but are not rewritten under the newer rule.
+
+The reference is differentiable. The CUDA and Triton implementations are explicitly
+forward only; they reject tensors requiring gradients instead of silently returning
+an incorrect training graph. Automatic dispatch remains conservative and falls back
+to the reference when the Triton device, dtype, layout, size, or gradient contract is
+not supported. The CUDA extension is selected only when explicitly requested. The
+supported Triton releases require NVIDIA compute capability 8.0 or newer; automatic
+dispatch falls back on older targets, and an explicit Triton request reports the
+observed capability instead of entering an unsupported compiler path.
 
 ## Kernel shape
 
@@ -53,6 +66,16 @@ official Triton normalization tutorial.
 That simple row ownership is easy to audit and works for common hidden dimensions.
 It is not assumed optimal. Wider rows, small row counts, register pressure, and newer
 hardware may favor multi-CTA reductions, persistent scheduling, or a library kernel.
+
+The CUDA implementation also owns one row per block. Two hundred fifty-six threads
+make coalesced FP16 loads, use compensated FP32 summation for each thread's square
+terms, reduce first within warps and then across eight warp totals in shared memory,
+and make a second coalesced pass to write the normalized output. Compensated local
+summation was introduced as a response to an observed wide-row discrepancy, but it did
+not eliminate the remaining one-element mismatch under the original absolute-only
+gate. It is retained as a defensive accumulation choice, not presented as a proven
+root-cause fix. The later scale-aware experiment is a separately versioned contract.
+The second pass trades redundant input loads for a small, portable state footprint.
 
 ## Modeling boundary
 
@@ -72,8 +95,8 @@ The manifest records the deterministic shuffled schedule and relative child path
 JSON Schema validates each document's shape. The recursive validator adds constraints
 that are relational rather than local: schedule completeness, path confinement,
 canonical replay commands, commit/dirty-state agreement, and matching seeds,
-providers, dtypes, and shapes. Schemas ship inside the wheel so installed tools do not
-depend on a source checkout or network access.
+providers, dtypes, shapes, and recorded correctness decisions. Schemas ship inside the
+wheel so installed tools do not depend on a source checkout or network access.
 
 The benchmark reports first-use and steady-state timing separately. First-use uses a
 host clock around a synchronized provider invocation and may include lazy compilation.
@@ -83,7 +106,7 @@ end-to-end serving latency measurement.
 ## Extension points
 
 - Add a backward kernel without changing the forward contract.
-- Add a native CUDA or CUTLASS comparator behind a new explicit provider.
+- Add a CUTLASS or structured framework comparator behind a new explicit provider.
 - Add device-specific launch configurations selected from checked-in tuning results.
 - Extend the collective benchmark with all-gather, reduce-scatter, and overlap tests.
 - Add low-precision kernels only with format-aware accuracy and scaling tests.

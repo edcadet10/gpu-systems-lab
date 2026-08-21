@@ -1,0 +1,11 @@
+Collecting data...
+Generating '/tmp/nsys-root/nsys-report-ec5b.qdstrm'
+
+[1/1] [0%                          ] residual-rmsnorm-torch.nsys-rep
+[1/1] [0%                          ] residual-rmsnorm-torch.nsys-rep
+[1/1] [=====32%                    ] residual-rmsnorm-torch.nsys-rep
+[1/1] [===========50%              ] residual-rmsnorm-torch.nsys-rep
+[1/1] [========================100%] residual-rmsnorm-torch.nsys-rep
+[1/1] [========================100%] residual-rmsnorm-torch.nsys-rep
+Generated:
+	/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.nsys-rep

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 
@@ -39,12 +40,31 @@ def _write_bundle(tmp_path: Path) -> Path:
     return manifest_path
 
 
+def _write_current_bundle(tmp_path: Path) -> Path:
+    manifest_path = tmp_path / "manifest.json"
+    child_path = tmp_path / "run-01" / "float16" / "cuda_extension.json"
+    child_path.parent.mkdir(parents=True)
+    manifest_path.write_text(
+        (FIXTURES / "valid-rmsnorm-suite-v3.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    child_path.write_text(
+        (FIXTURES / "valid-rmsnorm-v5.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    return manifest_path
+
+
 @pytest.mark.parametrize(
     ("fixture_name", "benchmark_type", "schema_version"),
     [
         ("valid-rmsnorm-v3.json", "residual_rmsnorm", 3),
+        ("valid-rmsnorm-v4.json", "residual_rmsnorm", 4),
+        ("valid-rmsnorm-v5.json", "residual_rmsnorm", 5),
         ("valid-allreduce-v3.json", "allreduce", 3),
         ("valid-rmsnorm-suite-v1.json", "residual_rmsnorm_suite", 1),
+        ("valid-rmsnorm-suite-v2.json", "residual_rmsnorm_suite", 2),
+        ("valid-rmsnorm-suite-v3.json", "residual_rmsnorm_suite", 3),
     ],
 )
 def test_packaged_schema_accepts_complete_report(
@@ -57,12 +77,19 @@ def test_packaged_schema_accepts_complete_report(
     assert result.schema_version == schema_version
 
 
+def test_current_bundle_contracts_validate_together(tmp_path: Path) -> None:
+    validation = validate_result_bundle_path(_write_current_bundle(tmp_path))
+
+    assert validation.schema_version == 3
+    assert validation.validated_children == 1
+
+
 def test_rmsnorm_producer_emits_current_contract() -> None:
-    fixture = _fixture("valid-rmsnorm-v3.json")
+    fixture = _fixture("valid-rmsnorm-v5.json")
     report = build_rmsnorm_report(
         environment=fixture["environment"],  # type: ignore[arg-type]
         results=fixture["results"],  # type: ignore[arg-type]
-        providers=["triton"],
+        providers=["cuda_extension"],
         warmup=25,
         repeats=2,
         seed=17,
@@ -72,7 +99,7 @@ def test_rmsnorm_producer_emits_current_contract() -> None:
         generated_at="2026-08-20T12:00:00+00:00",
     )
 
-    assert validate_report(report).schema_file == "rmsnorm-v3.schema.json"
+    assert validate_report(report).schema_file == "rmsnorm-v5.schema.json"
 
 
 def test_allreduce_producer_emits_current_contract() -> None:
@@ -119,6 +146,74 @@ def test_validation_recomputes_latency_summary() -> None:
     report["results"][0]["latency_ms"]["median"] = 99.0  # type: ignore[index]
 
     with pytest.raises(ReportValidationError, match=r"expected 0\.105"):
+        validate_report(report)
+
+
+def test_validation_rejects_legacy_recorded_correctness_failure() -> None:
+    report = _fixture("valid-rmsnorm-v3.json")
+    report["results"][0]["correctness"]["max_absolute_error"] = 0.0021  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match="correctness tolerance was exceeded"):
+        validate_report(report)
+
+
+def test_validation_rejects_scale_aware_correctness_failure() -> None:
+    report = _fixture("valid-rmsnorm-v5.json")
+    correctness = report["results"][0]["correctness"]  # type: ignore[index]
+    correctness["max_absolute_error"] = 0.002010201  # type: ignore[index]
+    correctness["max_absolute_error_reference_magnitude"] = 1000.0  # type: ignore[index]
+    correctness["max_error_ratio"] = 1.0001  # type: ignore[index]
+    correctness["max_error_ratio_absolute_error"] = 0.002010201  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match="scale-aware correctness tolerance"):
+        validate_report(report)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("relative_tolerance", 1.0), ("absolute_tolerance", 1.0)],
+)
+def test_validation_rejects_modified_scale_aware_tolerance(field: str, value: float) -> None:
+    report = _fixture("valid-rmsnorm-v5.json")
+    report["results"][0]["correctness"][field] = value  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match=f"correctness.{field}"):
+        validate_report(report)
+
+
+def test_validation_rejects_inconsistent_scale_aware_ratio_witness() -> None:
+    report = _fixture("valid-rmsnorm-v5.json")
+    report["results"][0]["correctness"]["max_error_ratio"] = 0.25  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match=r"expected .* from its witness"):
+        validate_report(report)
+
+
+def test_validation_rejects_failing_maximum_absolute_error_witness() -> None:
+    report = _fixture("valid-rmsnorm-v5.json")
+    correctness = report["results"][0]["correctness"]  # type: ignore[index]
+    correctness["max_absolute_error"] = 0.1  # type: ignore[index]
+    correctness["max_absolute_error_reference_magnitude"] = 0.0  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match="maximum-error witness exceeded"):
+        validate_report(report)
+
+
+def test_validation_rejects_non_fp16_cuda_extension_report() -> None:
+    report = _fixture("valid-rmsnorm-v5.json")
+    report["results"][0]["dtype"] = "bfloat16"  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match="CUDA extension provider supports float16"):
+        validate_report(report)
+
+
+def test_validation_rejects_non_fp16_cuda_extension_suite() -> None:
+    report = _fixture("valid-rmsnorm-suite-v3.json")
+    report["protocol"]["dtypes"] = ["bfloat16"]  # type: ignore[index]
+    report["reports"][0]["dtype"] = "bfloat16"  # type: ignore[index]
+    report["reports"][0]["command"][8] = "bfloat16"  # type: ignore[index]
+
+    with pytest.raises(ReportValidationError, match="CUDA extension provider support"):
         validate_report(report)
 
 
@@ -186,6 +281,14 @@ def test_validate_report_path_rejects_nonfinite_json_number(tmp_path: Path) -> N
         validate_report_path(path)
 
 
+def test_validate_report_path_rejects_non_utf8_input(tmp_path: Path) -> None:
+    path = tmp_path / "binary.json"
+    path.write_bytes(b"\xff")
+
+    with pytest.raises(ReportValidationError, match="not valid UTF-8"):
+        validate_report_path(path)
+
+
 def test_bundle_validation_rejects_child_path_escape(tmp_path: Path) -> None:
     manifest = _fixture("valid-rmsnorm-suite-v1.json")
     manifest["reports"][0]["relative_path"] = "../outside.json"  # type: ignore[index]
@@ -226,6 +329,42 @@ def test_bundle_validation_rejects_child_commit_drift(tmp_path: Path) -> None:
 
     with pytest.raises(ReportValidationError, match="git_commit mismatch"):
         validate_result_bundle_path(path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("device_name", "Different GPU"), ("cuda_compiler_version", "Different compiler")],
+)
+def test_bundle_validation_rejects_child_environment_drift(
+    tmp_path: Path,
+    field: str,
+    value: str,
+) -> None:
+    manifest = _fixture("valid-rmsnorm-suite-v3.json")
+    protocol = manifest["protocol"]
+    protocol["providers"] = ["torch_eager", "cuda_extension"]  # type: ignore[index]
+    second_record = copy.deepcopy(manifest["reports"][0])  # type: ignore[index]
+    second_record["provider"] = "torch_eager"
+    second_record["relative_path"] = "run-01/float16/torch_eager.json"
+    second_record["command"][10] = "torch_eager"
+    second_record["command"][-1] = second_record["relative_path"]
+    manifest["reports"].append(second_record)  # type: ignore[union-attr]
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    source = _fixture("valid-rmsnorm-v5.json")
+    for provider in ("cuda_extension", "torch_eager"):
+        child = copy.deepcopy(source)
+        child["protocol"]["provider_order"] = [provider]  # type: ignore[index]
+        child["results"][0]["provider"] = provider  # type: ignore[index]
+        if provider == "torch_eager":
+            child["environment"][field] = value  # type: ignore[index]
+        child_path = tmp_path / "run-01" / "float16" / f"{provider}.json"
+        child_path.parent.mkdir(parents=True, exist_ok=True)
+        child_path.write_text(json.dumps(child), encoding="utf-8")
+
+    with pytest.raises(ReportValidationError, match=rf"child environment {field} mismatch"):
+        validate_result_bundle_path(manifest_path)
 
 
 @pytest.mark.parametrize(

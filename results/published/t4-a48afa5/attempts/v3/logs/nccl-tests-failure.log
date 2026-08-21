@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 455, in <module>
+    run_step(
+  File "/kaggle/src/script.py", line 77, in run_step
+    raise RuntimeError(f"{name} failed with exit status {completed.returncode}")
+RuntimeError: allreduce-nccl-tests failed with exit status 2

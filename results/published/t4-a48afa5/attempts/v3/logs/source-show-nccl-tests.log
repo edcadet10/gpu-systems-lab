@@ -1,0 +1,10 @@
+commit 717b68318278e93f371d8ffb46b076069d7c7851
+Merge: 1a65d7f 7703c81
+Author:     David Addison <2538330+AddyLaddy@users.noreply.github.com>
+AuthorDate: Mon Aug 3 11:38:03 2026 -0700
+Commit:     GitHub <noreply@github.com>
+CommitDate: Mon Aug 3 11:38:03 2026 -0700
+
+    Merge pull request #392 from hiroshi-ya/master
+    
+    Adding an `MPI_INCLUDE` check in the `src/Makefile`

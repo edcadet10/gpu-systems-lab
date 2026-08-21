@@ -1,0 +1,2 @@
+index, name, driver_version, pstate, clocks.current.sm [MHz], clocks.current.memory [MHz], power.limit [W], memory.total [MiB]
+0, Tesla P100-PCIE-16GB, 580.159.04, P0, 405 MHz, 715 MHz, 250.00 W, 16384 MiB

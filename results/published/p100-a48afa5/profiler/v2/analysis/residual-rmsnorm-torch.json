@@ -1,0 +1,12 @@
+{
+  "expected_nvtx": "residual_rmsnorm:torch",
+  "kernel_rows": 278,
+  "kernel_table_rows": {
+    "CUPTI_ACTIVITY_KIND_KERNEL": 278
+  },
+  "nvtx_names": [
+    "residual_rmsnorm:torch"
+  ],
+  "provider": "torch",
+  "sqlite_relative_path": "analysis/residual-rmsnorm-torch.sqlite"
+}

@@ -7,6 +7,7 @@ protocol, profiler instructions, and documented hardware boundaries.
 ## v0.1 — foundation
 
 - [x] Fused residual-plus-RMSNorm forward kernel in Triton.
+- [x] Explicit FP16 CUDA extension with warp/block reduction and current-stream launch.
 - [x] PyTorch reference and safe dispatch contract.
 - [x] Logical traffic, roofline, and ring all-reduce models.
 - [x] Single-GPU and NCCL correctness-gated benchmark entry points.
@@ -20,9 +21,11 @@ protocol, profiler instructions, and documented hardware boundaries.
 - [x] Isolate each provider in a fresh process and randomize the registered schedule.
 - [x] Record first-use timing, Git state, runtime identity, and driver/clock/power state.
 - [x] Separate ignored local runs from a reviewed published-evidence registry.
-- [ ] Check in isolated-GPU measurements for at least two accelerator generations
+- [x] Automate the pre-registered candidate-versus-baseline claim decision.
+- [x] Check in isolated-GPU measurements for at least two accelerator generations
   ([tracking issue](https://github.com/edcadet10/gpu-systems-lab/issues/3)).
-- [ ] Compare the custom collective path with `nccl-tests` on recorded topology.
+- [ ] Compare the custom collective path with `nccl-tests` under matched execution
+  semantics; the first dual-T4 diagnostics are retained but not comparable.
 
 ## v0.3 — kernel depth
 

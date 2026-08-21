@@ -1,0 +1,12 @@
+ninja: no work to do.
+Collecting data...
+Generating '/tmp/nsys-root/nsys-report-3f3c.qdstrm'
+
+[1/1] [0%                          ] residual-rmsnorm-cuda_extension.nsys-rep
+[1/1] [0%                          ] residual-rmsnorm-cuda_extension.nsys-rep
+[1/1] [=====30%                    ] residual-rmsnorm-cuda_extension.nsys-rep
+[1/1] [===========50%              ] residual-rmsnorm-cuda_extension.nsys-rep
+[1/1] [========================100%] residual-rmsnorm-cuda_extension.nsys-rep
+[1/1] [========================100%] residual-rmsnorm-cuda_extension.nsys-rep
+Generated:
+	/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-cuda_extension.nsys-rep

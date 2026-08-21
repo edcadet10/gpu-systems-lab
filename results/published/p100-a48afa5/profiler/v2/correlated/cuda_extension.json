@@ -1,0 +1,15 @@
+{
+  "analysis_type": "nsys_nvtx_kernel_launches",
+  "analysis_version": 1,
+  "kernel_launches": 20,
+  "kernels": [
+    {
+      "instances": 20,
+      "name": "<unnamed>::residual_rmsnorm_fp16_kernel(const __half *, const __half *, const __half *, __half *, long, float)",
+      "total_time_ns": 2455601
+    }
+  ],
+  "nvtx_range": "residual_rmsnorm:cuda_extension",
+  "nvtx_range_duration_ns": 681533,
+  "sqlite_sha256": "4f5fb81e5b1a8bbb9dd99f5b6045009845f964941f714cfc3e5397d090f3d922"
+}

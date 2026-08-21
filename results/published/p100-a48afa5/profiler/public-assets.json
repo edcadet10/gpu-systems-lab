@@ -1,0 +1,38 @@
+{
+  "assets": [
+    {
+      "filename": "p100-profiler-v2-torch.sqlite",
+      "original_full_sqlite_sha256": "4070b002697c91456f501673fb7b8fccf2b9747575f791b36b364673386808c8",
+      "original_full_sqlite_size_bytes": 1323008,
+      "original_report_sha256": "6a70d70ab6293d40ba3ed3e68e50c59683b1c6e2ea3fe25f758ca595f9b32c44",
+      "original_report_size_bytes": 472568,
+      "provider": "torch",
+      "public_sha256": "2d86b4502ff721a9da493a39c022f52f3f95ab03a1e07a73dd70fc08153f9c81",
+      "public_size_bytes": 73728
+    },
+    {
+      "filename": "p100-profiler-v2-cuda-extension.sqlite",
+      "original_full_sqlite_sha256": "ebb9eff9bb19bae490ca334e7696deda26bab0632e57fa66a3ef372606431d9c",
+      "original_full_sqlite_size_bytes": 1327104,
+      "original_report_sha256": "d34df044b34ee8c86d65ecbb5ef62f9524b06a821148459ee54ec844e57f9c18",
+      "original_report_size_bytes": 489609,
+      "provider": "cuda_extension",
+      "public_sha256": "4f5fb81e5b1a8bbb9dd99f5b6045009845f964941f714cfc3e5397d090f3d922",
+      "public_size_bytes": 32768
+    }
+  ],
+  "release_tag": "evidence-a48afa5",
+  "schema_version": 1,
+  "transformation": {
+    "exported_tables": [
+      "NVTX_EVENTS",
+      "CUPTI_ACTIVITY_KIND_RUNTIME",
+      "CUPTI_ACTIVITY_KIND_KERNEL",
+      "StringIds"
+    ],
+    "exporter": "Systems 2025.3.1 nsys export",
+    "exporter_package_sha256": "d2484ad0faf6831b11fa0bf73c54232d9ea8beafb50414019e6ba299c4ed5718",
+    "string_filter": "Keep only StringIds referenced by the three activity tables, then VACUUM.",
+    "string_filter_sql": "sanitize-public-export.sql"
+  }
+}

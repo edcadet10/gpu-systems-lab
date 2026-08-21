@@ -1,0 +1,59 @@
+{
+  "benchmark_type": "residual_rmsnorm_suite",
+  "generated_at": "2026-08-20T12:00:00+00:00",
+  "git_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "git_dirty": false,
+  "protocol": {
+    "base_seed": 17,
+    "dtypes": [
+      "float16"
+    ],
+    "epsilon": 0.000001,
+    "hidden_sizes": [
+      4096
+    ],
+    "measured_iterations": 2,
+    "process_runs": 1,
+    "provider_isolation": "one provider per fresh Python process",
+    "providers": [
+      "cuda_extension"
+    ],
+    "rows": [
+      128
+    ],
+    "schedule_seed": 2026,
+    "warmup_iterations": 25
+  },
+  "reports": [
+    {
+      "command": [
+        "python",
+        "-m",
+        "gpu_systems_lab.benchmarks.residual_rmsnorm",
+        "--rows",
+        "128",
+        "--hidden",
+        "4096",
+        "--dtype",
+        "float16",
+        "--providers",
+        "cuda_extension",
+        "--warmup",
+        "25",
+        "--repeats",
+        "2",
+        "--seed",
+        "17",
+        "--epsilon",
+        "1e-06",
+        "--output",
+        "run-01/float16/cuda_extension.json"
+      ],
+      "dtype": "float16",
+      "provider": "cuda_extension",
+      "relative_path": "run-01/float16/cuda_extension.json",
+      "run_index": 1
+    }
+  ],
+  "schema_version": 3
+}

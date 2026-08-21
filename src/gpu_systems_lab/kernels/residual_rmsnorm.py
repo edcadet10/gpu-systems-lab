@@ -110,6 +110,17 @@ def _interpreter_enabled() -> bool:
     return os.environ.get("TRITON_INTERPRET", "0") == "1"
 
 
+def _triton_hardware_supported(input_tensor: Tensor) -> bool:
+    """Return whether the installed Triton contract supports this execution target."""
+
+    if _interpreter_enabled():
+        return True
+    if not input_tensor.is_cuda:
+        return False
+    major, _minor = _require_torch().cuda.get_device_capability(input_tensor.device)
+    return bool(major >= 8)
+
+
 def _triton_eligible(input_tensor: Tensor, residual: Tensor, weight: Tensor) -> bool:
     framework = _require_torch()
     supported_dtype = input_tensor.dtype in (
@@ -117,11 +128,17 @@ def _triton_eligible(input_tensor: Tensor, residual: Tensor, weight: Tensor) -> 
         framework.bfloat16,
         framework.float32,
     )
-    supported_device = input_tensor.is_cuda or _interpreter_enabled()
+    supported_device = _triton_hardware_supported(input_tensor)
+    supported_shape = (
+        input_tensor.shape[-1] <= 65_536 // input_tensor.element_size()
+        if input_tensor.ndim >= 1
+        else False
+    )
     return bool(
         triton is not None
         and supported_dtype
         and supported_device
+        and supported_shape
         and input_tensor.numel() > 0
         and input_tensor.is_contiguous()
         and residual.is_contiguous()
@@ -145,16 +162,22 @@ def residual_rmsnorm_triton(
         tensor.requires_grad for tensor in (input_tensor, residual, weight)
     ):
         raise RuntimeError("the Triton path is forward-only; use the reference path for autograd")
+    if input_tensor.is_cuda and not _triton_hardware_supported(input_tensor):
+        major, minor = framework.cuda.get_device_capability(input_tensor.device)
+        raise ValueError(
+            "the installed Triton release requires NVIDIA compute capability 8.0 or newer; "
+            f"this device reports {major}.{minor}"
+        )
+    hidden_size = input_tensor.shape[-1]
+    max_fused_size = 65_536 // input_tensor.element_size()
+    if hidden_size > max_fused_size:
+        raise ValueError("the final dimension must occupy no more than 64 KiB")
     if not _triton_eligible(input_tensor, residual, weight):
         raise ValueError(
             "the Triton path requires a supported device, dtype, and contiguous tensors"
         )
 
-    hidden_size = input_tensor.shape[-1]
-    max_fused_size = 65_536 // input_tensor.element_size()
-    block_size = min(max_fused_size, triton.next_power_of_2(hidden_size))
-    if hidden_size > block_size:
-        raise ValueError("the final dimension must occupy no more than 64 KiB")
+    block_size = triton.next_power_of_2(hidden_size)
 
     input_2d = input_tensor.reshape(-1, hidden_size)
     residual_2d = residual.reshape(-1, hidden_size)
@@ -180,7 +203,7 @@ def residual_rmsnorm(
     weight: Tensor,
     epsilon: float = 1e-6,
     *,
-    implementation: Literal["auto", "reference", "triton"] = "auto",
+    implementation: Literal["auto", "reference", "cuda_extension", "triton"] = "auto",
 ) -> Tensor:
     """Dispatch to Triton when eligible, otherwise preserve reference semantics."""
 
@@ -189,8 +212,14 @@ def residual_rmsnorm(
         return residual_rmsnorm_reference(input_tensor, residual, weight, epsilon)
     if implementation == "triton":
         return residual_rmsnorm_triton(input_tensor, residual, weight, epsilon)
+    if implementation == "cuda_extension":
+        from gpu_systems_lab.kernels.residual_rmsnorm_cuda import residual_rmsnorm_cuda
+
+        return residual_rmsnorm_cuda(input_tensor, residual, weight, epsilon)
     if implementation != "auto":
-        raise ValueError("implementation must be 'auto', 'reference', or 'triton'")
+        raise ValueError(
+            "implementation must be 'auto', 'reference', 'cuda_extension', or 'triton'"
+        )
     if _triton_eligible(input_tensor, residual, weight):
         no_grad_required = not (
             _require_torch().is_grad_enabled()

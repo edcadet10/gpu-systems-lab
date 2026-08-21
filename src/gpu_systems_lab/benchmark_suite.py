@@ -27,7 +27,8 @@ from gpu_systems_lab.result_validation import (
     validate_result_bundle_path,
 )
 
-PROVIDERS = ("torch_eager", "triton", "torch_compile")
+PROVIDERS = ("torch_eager", "cuda_extension", "triton", "torch_compile")
+DEFAULT_PROVIDERS = ("torch_eager", "triton", "torch_compile")
 DTYPES = ("float16", "bfloat16", "float32")
 CommandRunner = Callable[..., Any]
 
@@ -146,6 +147,8 @@ def run_suite(
         raise ValueError("epsilon must be positive")
     _validate_dimensions(rows, "rows")
     _validate_dimensions(hidden_sizes, "hidden_sizes")
+    if "cuda_extension" in providers and any(dtype != "float16" for dtype in dtypes):
+        raise ValueError("the CUDA extension provider supports float16 suites only")
     schedule = build_schedule(
         providers=providers,
         dtypes=dtypes,
@@ -204,7 +207,7 @@ def run_suite(
         )
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 3,
         "benchmark_type": "residual_rmsnorm_suite",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "git_commit": commit,
@@ -254,7 +257,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--providers",
         type=partial(choice_list, allowed=PROVIDERS, label="providers"),
-        default=list(PROVIDERS),
+        default=list(DEFAULT_PROVIDERS),
     )
     parser.add_argument("--process-runs", type=positive_integer, default=5)
     parser.add_argument("--warmup", type=positive_integer, default=25)

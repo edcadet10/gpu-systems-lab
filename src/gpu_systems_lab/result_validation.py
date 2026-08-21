@@ -10,11 +10,38 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
+from gpu_systems_lab.correctness import CORRECTNESS_COMPARISON, CORRECTNESS_TOLERANCES
+
 SCHEMA_FILES = {
     ("residual_rmsnorm", 3): "rmsnorm-v3.schema.json",
+    ("residual_rmsnorm", 4): "rmsnorm-v4.schema.json",
+    ("residual_rmsnorm", 5): "rmsnorm-v5.schema.json",
     ("allreduce", 3): "allreduce-v3.schema.json",
     ("residual_rmsnorm_suite", 1): "rmsnorm-suite-v1.schema.json",
+    ("residual_rmsnorm_suite", 2): "rmsnorm-suite-v2.schema.json",
+    ("residual_rmsnorm_suite", 3): "rmsnorm-suite-v3.schema.json",
 }
+
+SUITE_CHILD_SCHEMA_VERSIONS = {1: 3, 2: 4, 3: 5}
+
+SUITE_ENVIRONMENT_IDENTITY_FIELDS = (
+    "device_index",
+    "device_name",
+    "compute_capability",
+    "total_memory_bytes",
+    "python_version",
+    "operating_system",
+    "kernel_release",
+    "machine",
+    "pytorch_version",
+    "triton_version",
+    "cuda_runtime_version",
+    "cudnn_version",
+    "driver_version",
+    "power_limit_watts",
+    "cuda_compiler_version",
+    "cuda_arch_list",
+)
 
 
 class ReportValidationError(ValueError):
@@ -27,6 +54,24 @@ class ValidationResult:
     schema_version: int
     schema_file: str
     validated_children: int = 0
+
+
+@dataclass(frozen=True)
+class ValidatedDocument:
+    """One report decoded from the exact bytes retained for bundle analysis."""
+
+    relative_path: str
+    content: bytes
+    report: Any
+
+
+@dataclass(frozen=True)
+class ValidatedResultBundle:
+    """A recursively validated, single-read snapshot of a result bundle."""
+
+    validation: ValidationResult
+    report: dict[str, Any]
+    documents: tuple[ValidatedDocument, ...]
 
 
 def load_schema(schema_file: str) -> dict[str, Any]:
@@ -97,8 +142,72 @@ def _validate_report_semantics(report: dict[str, Any]) -> None:
                 raise ReportValidationError(
                     f"$.results[{index}].provider: missing from protocol provider_order"
                 )
+            if result["provider"] == "cuda_extension" and result["dtype"] != "float16":
+                raise ReportValidationError(
+                    f"$.results[{index}].dtype: the CUDA extension provider supports float16 only"
+                )
             shapes_by_provider[result["provider"]].add(tuple(result["shape"]))
             observed_dtypes.add(result["dtype"])
+            correctness = result["correctness"]
+            if report["schema_version"] >= 5:
+                relative_tolerance, absolute_tolerance = CORRECTNESS_TOLERANCES[result["dtype"]]
+                expected_fields = {
+                    "comparison": CORRECTNESS_COMPARISON,
+                    "relative_tolerance": relative_tolerance,
+                    "absolute_tolerance": absolute_tolerance,
+                }
+                for field, expected in expected_fields.items():
+                    if correctness[field] != expected:
+                        raise ReportValidationError(
+                            f"$.results[{index}].correctness.{field}: "
+                            f"expected {expected!r} for {result['dtype']}, got "
+                            f"{correctness[field]!r}"
+                        )
+                max_absolute_allowance = (
+                    absolute_tolerance
+                    + relative_tolerance * correctness["max_absolute_error_reference_magnitude"]
+                )
+                if correctness["max_absolute_error"] > max_absolute_allowance:
+                    raise ReportValidationError(
+                        f"$.results[{index}].correctness.max_absolute_error: "
+                        "maximum-error witness exceeded its scale-aware allowance"
+                    )
+                if (
+                    correctness["max_error_ratio_absolute_error"]
+                    > correctness["max_absolute_error"]
+                ):
+                    raise ReportValidationError(
+                        f"$.results[{index}].correctness.max_error_ratio_absolute_error: "
+                        "cannot exceed the recorded maximum absolute error"
+                    )
+                recomputed_ratio = correctness["max_error_ratio_absolute_error"] / (
+                    absolute_tolerance
+                    + relative_tolerance * correctness["max_error_ratio_reference_magnitude"]
+                )
+                if not math.isclose(
+                    correctness["max_error_ratio"],
+                    recomputed_ratio,
+                    rel_tol=1e-12,
+                    abs_tol=1e-12,
+                ):
+                    raise ReportValidationError(
+                        f"$.results[{index}].correctness.max_error_ratio: "
+                        f"expected {recomputed_ratio!r} from its witness, got "
+                        f"{correctness['max_error_ratio']!r}"
+                    )
+                if correctness["max_error_ratio"] > 1:
+                    raise ReportValidationError(
+                        f"$.results[{index}].correctness.max_error_ratio: "
+                        "recorded scale-aware correctness tolerance was exceeded"
+                    )
+            if (
+                report["schema_version"] < 5
+                and correctness["max_absolute_error"] > correctness["absolute_tolerance"]
+            ):
+                raise ReportValidationError(
+                    f"$.results[{index}].correctness.max_absolute_error: "
+                    "recorded correctness tolerance was exceeded"
+                )
             _validate_latency_summary(
                 result["latency_ms"],
                 expected_samples=report["protocol"]["measured_iterations"],
@@ -110,6 +219,14 @@ def _validate_report_semantics(report: dict[str, Any]) -> None:
         if not shape_sets[0] or any(shapes != shape_sets[0] for shapes in shape_sets[1:]):
             raise ReportValidationError(
                 "$.results: every protocol provider must cover the same non-empty shape grid"
+            )
+    elif benchmark_type == "residual_rmsnorm_suite":
+        protocol = report["protocol"]
+        if "cuda_extension" in protocol["providers"] and any(
+            dtype != "float16" for dtype in protocol["dtypes"]
+        ):
+            raise ReportValidationError(
+                "$.protocol.dtypes: suites using the CUDA extension provider support float16 only"
             )
     elif benchmark_type == "allreduce":
         environment = report["environment"]
@@ -180,15 +297,17 @@ def _reject_nonfinite_constant(value: str) -> None:
     raise ValueError(f"non-finite number {value} is not valid report JSON")
 
 
-def load_report_path(path: Path) -> Any:
-    """Read strict JSON from disk, rejecting JavaScript-style non-finite numbers."""
-
+def _read_report_document(path: Path, *, relative_path: str) -> ValidatedDocument:
     try:
-        content = path.read_text(encoding="utf-8")
+        content = path.read_bytes()
     except OSError as error:
         raise ReportValidationError(f"{path}: {error.strerror or error}") from error
     try:
-        return json.loads(content, parse_constant=_reject_nonfinite_constant)
+        text = content.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise ReportValidationError(f"{path}:{error.start}: report is not valid UTF-8") from error
+    try:
+        report = json.loads(text, parse_constant=_reject_nonfinite_constant)
     except (json.JSONDecodeError, ValueError) as error:
         if isinstance(error, json.JSONDecodeError):
             location = f":{error.lineno}:{error.colno}"
@@ -197,6 +316,13 @@ def load_report_path(path: Path) -> Any:
             location = ""
             message = str(error)
         raise ReportValidationError(f"{path}{location}: invalid JSON: {message}") from error
+    return ValidatedDocument(relative_path=relative_path, content=content, report=report)
+
+
+def load_report_path(path: Path) -> Any:
+    """Read strict JSON from disk, rejecting JavaScript-style non-finite numbers."""
+
+    return _read_report_document(path, relative_path=path.name).report
 
 
 def validate_report_path(path: Path) -> ValidationResult:
@@ -237,9 +363,10 @@ def _validate_suite_child(
     record: dict[str, Any],
     child: dict[str, Any],
 ) -> None:
+    child_schema_version = SUITE_CHILD_SCHEMA_VERSIONS[manifest["schema_version"]]
     expected_identity = {
         "benchmark_type": "residual_rmsnorm",
-        "schema_version": 3,
+        "schema_version": child_schema_version,
         "git_commit": manifest["git_commit"],
         "git_dirty": manifest["git_dirty"],
     }
@@ -288,14 +415,19 @@ def _validate_suite_child(
         )
 
 
-def validate_result_bundle_path(path: Path) -> ValidationResult:
-    """Validate one report and all recursively referenced suite reports."""
+def load_validated_result_bundle_path(path: Path) -> ValidatedResultBundle:
+    """Read each document once, recursively validate it, and retain the exact bytes."""
 
-    report = load_report_path(path)
+    root_document = _read_report_document(path, relative_path=path.name)
+    report = root_document.report
     result = validate_report(report)
-    if result.benchmark_type != "residual_rmsnorm_suite":
-        return result
     assert isinstance(report, dict)
+    if result.benchmark_type != "residual_rmsnorm_suite":
+        return ValidatedResultBundle(
+            validation=result,
+            report=report,
+            documents=(root_document,),
+        )
 
     protocol = report["protocol"]
     expected_records = {
@@ -314,6 +446,9 @@ def validate_result_bundle_path(path: Path) -> ValidationResult:
 
     suite_root = path.parent.resolve()
     seen_paths: set[Path] = set()
+    child_documents: list[ValidatedDocument] = []
+    reference_environment: dict[str, Any] | None = None
+    reference_environment_path: str | None = None
     for record in report["reports"]:
         if record["command"] != _expected_suite_command(report, record):
             raise ReportValidationError(
@@ -329,18 +464,55 @@ def validate_result_bundle_path(path: Path) -> ValidationResult:
                 f"$.reports: duplicate child path: {record['relative_path']}"
             )
         seen_paths.add(child_path)
-        child = load_report_path(child_path)
+        normalized_relative_path = child_path.relative_to(suite_root).as_posix()
+        child_document = _read_report_document(
+            child_path,
+            relative_path=normalized_relative_path,
+        )
+        child = child_document.report
         child_result = validate_report(child)
-        if child_result.benchmark_type != "residual_rmsnorm" or child_result.schema_version != 3:
+        expected_child_version = SUITE_CHILD_SCHEMA_VERSIONS[result.schema_version]
+        if (
+            child_result.benchmark_type != "residual_rmsnorm"
+            or child_result.schema_version != expected_child_version
+        ):
             raise ReportValidationError(
                 f"child report has unsupported suite contract: {record['relative_path']}"
             )
         assert isinstance(child, dict)
         _validate_suite_child(report, record, child)
+        environment_identity = {
+            field: child["environment"][field]
+            for field in SUITE_ENVIRONMENT_IDENTITY_FIELDS
+            if field in child["environment"]
+        }
+        if reference_environment is None:
+            reference_environment = environment_identity
+            reference_environment_path = normalized_relative_path
+        else:
+            for field, expected in reference_environment.items():
+                observed = environment_identity[field]
+                if observed != expected:
+                    raise ReportValidationError(
+                        f"child environment {field} mismatch: "
+                        f"{normalized_relative_path} recorded {observed!r}; "
+                        f"{reference_environment_path} recorded {expected!r}"
+                    )
+        child_documents.append(child_document)
 
-    return ValidationResult(
-        benchmark_type=result.benchmark_type,
-        schema_version=result.schema_version,
-        schema_file=result.schema_file,
-        validated_children=len(seen_paths),
+    return ValidatedResultBundle(
+        validation=ValidationResult(
+            benchmark_type=result.benchmark_type,
+            schema_version=result.schema_version,
+            schema_file=result.schema_file,
+            validated_children=len(seen_paths),
+        ),
+        report=report,
+        documents=(root_document, *child_documents),
     )
+
+
+def validate_result_bundle_path(path: Path) -> ValidationResult:
+    """Validate one report and all recursively referenced suite reports."""
+
+    return load_validated_result_bundle_path(path).validation

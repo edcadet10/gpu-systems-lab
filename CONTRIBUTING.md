@@ -33,7 +33,9 @@ python -m build
 The explicit CPU wheel keeps this setup usable without an NVIDIA driver while still
 exercising the PyTorch reference, autograd behavior, and Triton interpreter on Linux
 x86-64. GPU contributors can install the framework wheel appropriate for their CUDA
-stack, then install `.[dev,gpu]` and run `pytest -m gpu`.
+stack, then install `.[dev,gpu]` and run `pytest -m gpu`. Exercising the explicit CUDA
+provider also requires a local CUDA toolkit with `nvcc`; its first use builds through
+Ninja in the framework extension cache.
 
 The required quality check runs the full sequence above. The Python-version matrix
 runs the dependency-free models, parsers, metadata helpers, suite orchestration, and
@@ -45,6 +47,8 @@ generation or timing.
 - Write the mathematical and dtype contract before the accelerated implementation.
 - Include awkward shapes, masked tails, zeros, large finite values, and invalid input
   tests where relevant.
+- Use a dtype-appropriate, scale-aware correctness rule and test both large-magnitude
+  and near-zero failures; do not loosen a registered gate after observing results.
 - State layout, alignment, dtype, compute-capability, and size restrictions explicitly.
 - Reject unsupported autograd behavior; do not silently detach.
 - Compare with a strong baseline and keep losing shapes in the result set.

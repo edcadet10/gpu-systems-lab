@@ -1,0 +1,138 @@
+{
+  "benchmark_type": "allreduce",
+  "environment": {
+    "ranks": [
+      {
+        "compute_capability": [
+          7,
+          5
+        ],
+        "cuda_runtime_version": "12.6",
+        "device_index": 0,
+        "device_name": "Tesla T4",
+        "driver_version": "580.159.04",
+        "kernel_release": "6.12.90+",
+        "local_rank": 0,
+        "machine": "x86_64",
+        "memory_clock_mhz": 5000.0,
+        "nccl_version": [
+          2,
+          29,
+          3
+        ],
+        "nvidia_smi_query_status": "ok",
+        "operating_system": "Linux",
+        "performance_state": "P0",
+        "power_limit_watts": 70.0,
+        "python_version": "3.12.13",
+        "pytorch_version": "2.13.0+cu126",
+        "rank": 0,
+        "sm_clock_mhz": 1590.0,
+        "total_memory_bytes": 15636037632
+      },
+      {
+        "compute_capability": [
+          7,
+          5
+        ],
+        "cuda_runtime_version": "12.6",
+        "device_index": 1,
+        "device_name": "Tesla T4",
+        "driver_version": "580.159.04",
+        "kernel_release": "6.12.90+",
+        "local_rank": 1,
+        "machine": "x86_64",
+        "memory_clock_mhz": 5000.0,
+        "nccl_version": [
+          2,
+          29,
+          3
+        ],
+        "nvidia_smi_query_status": "ok",
+        "operating_system": "Linux",
+        "performance_state": "P0",
+        "power_limit_watts": 70.0,
+        "python_version": "3.12.13",
+        "pytorch_version": "2.13.0+cu126",
+        "rank": 1,
+        "sm_clock_mhz": 1590.0,
+        "total_memory_bytes": 15636037632
+      }
+    ],
+    "world_size": 2
+  },
+  "generated_at": "2026-08-21T03:21:55.709195+00:00",
+  "git_commit": "a48afa5909d0c9ff58934ebaa50e57aff197cdf6",
+  "git_dirty": false,
+  "protocol": {
+    "correctness_consensus": "all-rank integer minimum",
+    "measured_iterations": 50,
+    "rank_aggregation": "maximum latency for each measured iteration",
+    "timer": "CUDA events",
+    "warmup_iterations": 10
+  },
+  "result": {
+    "correctness_expected": 2.0,
+    "correctness_observed": 2.0,
+    "critical_path_latency_ms": {
+      "median": 18.813936233520508,
+      "observed_maximum": 19.46828842163086,
+      "observed_minimum": 18.59337615966797,
+      "samples": [
+        19.421119689941406,
+        19.46828842163086,
+        19.36319923400879,
+        19.415103912353516,
+        19.01487922668457,
+        19.023487091064453,
+        18.974815368652344,
+        18.803199768066406,
+        18.805824279785156,
+        18.741247177124023,
+        18.95801544189453,
+        18.810848236083984,
+        18.860031127929688,
+        18.76678466796875,
+        18.82966423034668,
+        18.79360008239746,
+        18.80124855041504,
+        18.73801612854004,
+        18.69424057006836,
+        18.682432174682617,
+        18.629440307617188,
+        18.869312286376953,
+        18.725439071655273,
+        18.8253116607666,
+        18.820383071899414,
+        18.786848068237305,
+        18.780160903930664,
+        18.59337615966797,
+        18.867904663085938,
+        18.877248764038086,
+        18.82931137084961,
+        18.79302406311035,
+        18.894847869873047,
+        18.80499267578125,
+        18.802303314208984,
+        18.706432342529297,
+        18.921728134155273,
+        18.86617660522461,
+        18.839872360229492,
+        18.761472702026367,
+        18.877376556396484,
+        18.7903995513916,
+        18.85193634033203,
+        18.65203285217285,
+        18.71673583984375,
+        18.752063751220703,
+        19.05708885192871,
+        18.726591110229492,
+        18.81702423095703,
+        18.84307289123535
+      ]
+    },
+    "dtype": "float16",
+    "message_bytes": 134217728
+  },
+  "schema_version": 3
+}

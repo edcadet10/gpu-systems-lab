@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 455, in <module>
+    run_step(
+  File "/kaggle/src/script.py", line 77, in run_step
+    raise RuntimeError(f"{name} failed with exit status {completed.returncode}")
+RuntimeError: allreduce-nccl-tests failed with exit status 2
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 494, in <module>
+    raise RuntimeError("the registered upstream collective cross-check failed") from error
+RuntimeError: the registered upstream collective cross-check failed

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edcadet10/gpu-systems-lab/raw/main/src/gpu_systems_lab/schemas/rmsnorm-suite-v2.schema.json",
+  "title": "Isolated residual plus RMSNorm benchmark suite manifest v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_type",
+    "generated_at",
+    "git_commit",
+    "git_dirty",
+    "protocol",
+    "reports"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "benchmark_type": { "const": "residual_rmsnorm_suite" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "git_commit": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+    },
+    "git_dirty": { "type": ["boolean", "null"] },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "process_runs",
+        "providers",
+        "dtypes",
+        "rows",
+        "hidden_sizes",
+        "warmup_iterations",
+        "measured_iterations",
+        "base_seed",
+        "epsilon",
+        "schedule_seed",
+        "provider_isolation"
+      ],
+      "properties": {
+        "process_runs": { "type": "integer", "minimum": 1 },
+        "providers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["torch_eager", "cuda_extension", "triton", "torch_compile"] }
+        },
+        "dtypes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["float16", "bfloat16", "float32"] }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "hidden_sizes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "warmup_iterations": { "type": "integer", "minimum": 1 },
+        "measured_iterations": { "type": "integer", "minimum": 1 },
+        "base_seed": { "type": "integer" },
+        "epsilon": { "type": "number", "exclusiveMinimum": 0 },
+        "schedule_seed": { "type": "integer" },
+        "provider_isolation": { "const": "one provider per fresh Python process" }
+      },
+      "additionalProperties": false
+    },
+    "reports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["run_index", "dtype", "provider", "relative_path", "command"],
+        "properties": {
+          "run_index": { "type": "integer", "minimum": 1 },
+          "dtype": { "enum": ["float16", "bfloat16", "float32"] },
+          "provider": { "enum": ["torch_eager", "cuda_extension", "triton", "torch_compile"] },
+          "relative_path": { "type": "string", "pattern": "^[^/].*\\.json$" },
+          "command": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

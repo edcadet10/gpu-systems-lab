@@ -1,0 +1,14 @@
+[
+  {
+    "provider": "torch",
+    "relative_path": "profiles/residual-rmsnorm-torch.nsys-rep",
+    "sha256": "acaaf6c65adc7e157343a6ae89e8578a7361b4719bb00ad86b7e5cb9bbd858dc",
+    "size_bytes": 462809
+  },
+  {
+    "provider": "cuda_extension",
+    "relative_path": "profiles/residual-rmsnorm-cuda_extension.nsys-rep",
+    "sha256": "b3f1d30248eb1c1808856022b5b6a5a0b5c781631deff3f974f1522787a5e5ae",
+    "size_bytes": 497498
+  }
+]

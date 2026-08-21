@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/kaggle/src/script.py", line 212, in <module>
+    runtime = run_step(
+              ^^^^^^^^^
+  File "/kaggle/src/script.py", line 77, in run_step
+    raise RuntimeError(f"{name} failed with exit status {completed.returncode}")
+RuntimeError: runtime-preflight failed with exit status 1

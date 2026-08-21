@@ -1,0 +1,13 @@
+{
+  "CUDA_VISIBLE_DEVICES": "0,1",
+  "NCCL_DEBUG": "INFO",
+  "cross_tool_comparable": false,
+  "cross_tool_comparison_reason": "process models differ; retain the upstream run as a diagnostic, not a head-to-head latency claim",
+  "dtype": "float16",
+  "measured_iterations": 50,
+  "message_bytes": 134217728,
+  "project_process_model": "two processes with one GPU per process",
+  "upstream_process_model": "one process with two GPUs in one thread",
+  "upstream_source_commit": "717b68318278e93f371d8ffb46b076069d7c7851",
+  "warmup_iterations": 10
+}

@@ -1,0 +1,7 @@
+commit a48afa5909d0c9ff58934ebaa50e57aff197cdf6
+Author:     Jeff Cadet <122575244+edcadet10@users.noreply.github.com>
+AuthorDate: Thu Aug 20 22:33:41 2026 -0400
+Commit:     Jeff Cadet <122575244+edcadet10@users.noreply.github.com>
+CommitDate: Thu Aug 20 22:33:41 2026 -0400
+
+    fix: export Nsight Compute reports

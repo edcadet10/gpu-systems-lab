@@ -1,0 +1,425 @@
+{
+  "analysis_type": "rmsnorm_suite_comparison",
+  "analysis_version": 1,
+  "baseline": "torch_eager",
+  "broad_claim_status": "held",
+  "candidate": "cuda_extension",
+  "dtypes": [
+    "float16"
+  ],
+  "environment_identity": {
+    "compute_capability": [
+      7,
+      5
+    ],
+    "cuda_arch_list": "7.5",
+    "cuda_compiler_version": "Build cuda_12.8.r12.8/compiler.35583870_0",
+    "cuda_runtime_version": "12.6",
+    "cudnn_version": 91002,
+    "device_index": 0,
+    "device_name": "Tesla T4",
+    "driver_version": "580.159.04",
+    "kernel_release": "6.12.90+",
+    "machine": "x86_64",
+    "operating_system": "Linux",
+    "power_limit_watts": 70.0,
+    "python_version": "3.12.13",
+    "pytorch_version": "2.13.0+cu126",
+    "total_memory_bytes": 15636037632,
+    "triton_version": "3.7.1"
+  },
+  "minimum_reduction_percent": "5.0",
+  "observation_count": 30,
+  "observations": [
+    {
+      "baseline_median_ms": "0.1775519996881485",
+      "candidate_median_ms": "0.041680000722408295",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.168674399703741075",
+      "run_index": 1,
+      "shape": [
+        128,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "0.1759200021624565",
+      "candidate_median_ms": "0.04411200061440468",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.167124002054333675",
+      "run_index": 1,
+      "shape": [
+        128,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "0.328575998544693",
+      "candidate_median_ms": "0.08787199854850769",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.31214719861745835",
+      "run_index": 1,
+      "shape": [
+        128,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.3285119980573654",
+      "candidate_median_ms": "0.07020799815654755",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.312086398154497130",
+      "run_index": 1,
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "1.145039975643158",
+      "candidate_median_ms": "0.2027679979801178",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "1.08778797686100010",
+      "run_index": 1,
+      "shape": [
+        1024,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "2.1176319122314453",
+      "candidate_median_ms": "0.4469600021839142",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "2.011750316619873035",
+      "run_index": 1,
+      "shape": [
+        1024,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.1658560037612915",
+      "candidate_median_ms": "0.04211200028657913",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.157563203573226925",
+      "run_index": 2,
+      "shape": [
+        128,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "0.1698239967226982",
+      "candidate_median_ms": "0.04505600035190582",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.161332796886563290",
+      "run_index": 2,
+      "shape": [
+        128,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "0.32150399684906006",
+      "candidate_median_ms": "0.08806400001049042",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.3054287970066070570",
+      "run_index": 2,
+      "shape": [
+        128,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.31539198756217957",
+      "candidate_median_ms": "0.06963200122117996",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.2996223881840705915",
+      "run_index": 2,
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "1.1199040412902832",
+      "candidate_median_ms": "0.2008799985051155",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "1.063908839225769040",
+      "run_index": 2,
+      "shape": [
+        1024,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "2.120703935623169",
+      "candidate_median_ms": "0.44473598897457123",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "2.01466873884201055",
+      "run_index": 2,
+      "shape": [
+        1024,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.17126400023698807",
+      "candidate_median_ms": "0.04350399971008301",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.1627008002251386665",
+      "run_index": 3,
+      "shape": [
+        128,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "0.16782400012016296",
+      "candidate_median_ms": "0.04335999861359596",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.1594328001141548120",
+      "run_index": 3,
+      "shape": [
+        128,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "0.3255999982357025",
+      "candidate_median_ms": "0.08700799942016602",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.309319998323917375",
+      "run_index": 3,
+      "shape": [
+        128,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.32104000449180603",
+      "candidate_median_ms": "0.06948800012469292",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.3049880042672157285",
+      "run_index": 3,
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "1.128223955631256",
+      "candidate_median_ms": "0.19961600005626678",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "1.07181275784969320",
+      "run_index": 3,
+      "shape": [
+        1024,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "2.117664098739624",
+      "candidate_median_ms": "0.445360004901886",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "2.01178089380264280",
+      "run_index": 3,
+      "shape": [
+        1024,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.17076800018548965",
+      "candidate_median_ms": "0.04095999896526337",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.1622296001762151675",
+      "run_index": 4,
+      "shape": [
+        128,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "0.16940800100564957",
+      "candidate_median_ms": "0.04497599974274635",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.1609376009553670915",
+      "run_index": 4,
+      "shape": [
+        128,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "0.327567994594574",
+      "candidate_median_ms": "0.087567999958992",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.31118959486484530",
+      "run_index": 4,
+      "shape": [
+        128,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.32767999172210693",
+      "candidate_median_ms": "0.0697920024394989",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.3112959921360015835",
+      "run_index": 4,
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "1.1429440379142761",
+      "candidate_median_ms": "0.2019999995827675",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "1.085796836018562295",
+      "run_index": 4,
+      "shape": [
+        1024,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "2.1157599687576294",
+      "candidate_median_ms": "0.4480479955673218",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "2.009971970319747930",
+      "run_index": 4,
+      "shape": [
+        1024,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.170352004468441",
+      "candidate_median_ms": "0.04097599908709526",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.16183440424501895",
+      "run_index": 5,
+      "shape": [
+        128,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "0.17643199861049652",
+      "candidate_median_ms": "0.04134399816393852",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.1676103986799716940",
+      "run_index": 5,
+      "shape": [
+        128,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "0.3338080048561096",
+      "candidate_median_ms": "0.08406399935483932",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.317117604613304120",
+      "run_index": 5,
+      "shape": [
+        128,
+        8192
+      ]
+    },
+    {
+      "baseline_median_ms": "0.323168009519577",
+      "candidate_median_ms": "0.06593599915504456",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "0.30700960904359815",
+      "run_index": 5,
+      "shape": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "baseline_median_ms": "1.1263999938964844",
+      "candidate_median_ms": "0.19009599834680557",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "1.070079994201660180",
+      "run_index": 5,
+      "shape": [
+        1024,
+        4096
+      ]
+    },
+    {
+      "baseline_median_ms": "2.115583896636963",
+      "candidate_median_ms": "0.4281439930200577",
+      "criterion_met": true,
+      "dtype": "float16",
+      "maximum_candidate_latency_ms": "2.00980470180511485",
+      "run_index": 5,
+      "shape": [
+        1024,
+        8192
+      ]
+    }
+  ],
+  "process_runs": 5,
+  "shape_grid": [
+    [
+      128,
+      1024
+    ],
+    [
+      128,
+      4096
+    ],
+    [
+      128,
+      8192
+    ],
+    [
+      1024,
+      1024
+    ],
+    [
+      1024,
+      4096
+    ],
+    [
+      1024,
+      8192
+    ]
+  ],
+  "source_bundle_sha256": "e205e3c775a1b4a8cc62049e2c2afd04bd499df8ff1bc2050d3b33c0ce8cf384",
+  "source_git_commit": "a48afa5909d0c9ff58934ebaa50e57aff197cdf6",
+  "source_git_dirty": false
+}

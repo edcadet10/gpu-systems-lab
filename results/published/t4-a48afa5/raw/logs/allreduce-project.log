@@ -1,0 +1,88 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+[W821 03:21:51.499244536 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W821 03:21:54.650047043 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+[W821 03:21:54.660180563 socket.cpp:207] [c10d] The hostname of the client socket cannot be retrieved. err=-3
+22f64f592750:336:336 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+22f64f592750:336:336 [0] NCCL INFO Bootstrap: Using eth0:172.19.2.2<0>
+22f64f592750:336:336 [0] NCCL INFO cudaDriverVersion 13000
+22f64f592750:336:336 [0] NCCL INFO NCCL version 2.29.3+cuda12.9
+22f64f592750:336:336 [0] NCCL INFO NCCL git version stable dcf2a2fbe
+22f64f592750:336:336 [0] NCCL INFO Comm config Blocking set to 1
+22f64f592750:337:337 [1] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+22f64f592750:337:337 [1] NCCL INFO cudaDriverVersion 13000
+22f64f592750:337:337 [1] NCCL INFO Bootstrap: Using eth0:172.19.2.2<0>
+22f64f592750:337:337 [1] NCCL INFO NCCL version 2.29.3+cuda12.9
+22f64f592750:337:337 [1] NCCL INFO NCCL git version stable dcf2a2fbe
+22f64f592750:337:337 [1] NCCL INFO Comm config Blocking set to 1
+22f64f592750:336:336 [0] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+22f64f592750:337:337 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+22f64f592750:336:336 [0] NCCL INFO NET/IB : No device found.
+22f64f592750:337:337 [1] NCCL INFO NET/IB : No device found.
+22f64f592750:337:337 [1] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.19.2.2<0>
+22f64f592750:336:336 [0] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.19.2.2<0>
+22f64f592750:337:337 [1] NCCL INFO Failed to initialize NET plugin IB
+22f64f592750:336:336 [0] NCCL INFO Failed to initialize NET plugin IB
+22f64f592750:337:337 [1] NCCL INFO NET/Socket : Using [0]eth0:172.19.2.2<0>
+22f64f592750:336:336 [0] NCCL INFO NET/Socket : Using [0]eth0:172.19.2.2<0>
+22f64f592750:336:336 [0] NCCL INFO Initialized NET plugin Socket
+22f64f592750:337:337 [1] NCCL INFO Initialized NET plugin Socket
+22f64f592750:337:337 [1] NCCL INFO Assigned NET plugin Socket to comm
+22f64f592750:336:336 [0] NCCL INFO Assigned NET plugin Socket to comm
+22f64f592750:337:337 [1] NCCL INFO Using network Socket
+22f64f592750:336:336 [0] NCCL INFO Using network Socket
+22f64f592750:337:337 [1] NCCL INFO [Rank 1] ncclCommInitRankConfig comm 0x2089acd0 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 50 commId 0xc6c1f57c515612c3 - Init START
+22f64f592750:336:336 [0] NCCL INFO [Rank 0] ncclCommInitRankConfig comm 0x354f4200 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 40 commId 0xc6c1f57c515612c3 - Init START
+22f64f592750:336:336 [0] NCCL INFO RAS client listening socket at ::1<28028>
+22f64f592750:337:337 [1] NCCL INFO RAS client listening socket at ::1<28028>
+22f64f592750:336:336 [0] NCCL INFO Bootstrap timings total 0.001846 (create 0.000048, send 0.000129, recv 0.000980, ring 0.000057, delay 0.000001)
+22f64f592750:337:337 [1] NCCL INFO Bootstrap timings total 0.004017 (create 0.000058, send 0.000165, recv 0.002930, ring 0.000037, delay 0.000000)
+22f64f592750:336:336 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-3. (GPU affinity = 0-3 ; CPU affinity = 0-3).
+22f64f592750:336:336 [0] NCCL INFO NVLS multicast support is not available on dev 0 (NVLS_NCHANNELS 0)
+22f64f592750:337:337 [1] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is 0-3. (GPU affinity = 0-3 ; CPU affinity = 0-3).
+22f64f592750:337:337 [1] NCCL INFO NVLS multicast support is not available on dev 1 (NVLS_NCHANNELS 0)
+22f64f592750:336:336 [0] NCCL INFO comm 0x354f4200 rank 0 nRanks 2 nNodes 1 localRanks 2 localRank 0 MNNVL 0
+22f64f592750:337:337 [1] NCCL INFO comm 0x2089acd0 rank 1 nRanks 2 nNodes 1 localRanks 2 localRank 1 MNNVL 0
+22f64f592750:337:337 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] -1/-1/-1->1->0
+22f64f592750:336:336 [0] NCCL INFO Channel 00/02 : 0 1
+22f64f592750:336:336 [0] NCCL INFO Channel 01/02 : 0 1
+22f64f592750:336:336 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1
+22f64f592750:337:337 [1] NCCL INFO P2P Chunksize set to 131072
+22f64f592750:336:336 [0] NCCL INFO P2P Chunksize set to 131072
+22f64f592750:336:336 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+22f64f592750:337:337 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+22f64f592750:337:337 [1] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 0
+22f64f592750:336:336 [0] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 0
+22f64f592750:336:351 [0] NCCL INFO [Proxy Service] Device 0 CPU core 0
+22f64f592750:337:353 [0] NCCL INFO [Proxy Service UDS] Device 1 CPU core 1
+22f64f592750:336:354 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 3
+22f64f592750:337:352 [0] NCCL INFO [Proxy Service] Device 1 CPU core 0
+22f64f592750:337:337 [1] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+22f64f592750:336:336 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+22f64f592750:337:337 [1] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+22f64f592750:337:337 [1] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+22f64f592750:337:337 [1] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 1
+22f64f592750:336:336 [0] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+22f64f592750:336:336 [0] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+22f64f592750:336:336 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 1
+22f64f592750:336:336 [0] NCCL INFO CC Off, workFifoBytes 1048576
+22f64f592750:337:337 [1] NCCL INFO ncclCommInitRankConfig comm 0x2089acd0 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 50 commId 0xc6c1f57c515612c3 - Init COMPLETE
+22f64f592750:337:337 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 1 nranks 2 total 0.31 (kernels 0.24, alloc 0.05, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.00, rest 0.00)
+22f64f592750:336:336 [0] NCCL INFO ncclCommInitRankConfig comm 0x354f4200 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 40 commId 0xc6c1f57c515612c3 - Init COMPLETE
+22f64f592750:336:336 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 2 total 0.32 (kernels 0.24, alloc 0.05, bootstrap 0.00, allgathers 0.00, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+22f64f592750:336:336 [0] NCCL INFO Channel 00 : 0[0] -> 1[1] via SHM/direct/direct
+22f64f592750:336:336 [0] NCCL INFO Channel 01 : 0[0] -> 1[1] via SHM/direct/direct
+22f64f592750:337:337 [1] NCCL INFO Channel 00 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:337:337 [1] NCCL INFO Channel 01 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:336:336 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+22f64f592750:337:337 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+22f64f592750:337:337 [1] NCCL INFO Channel 00 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:337:337 [1] NCCL INFO Channel 01 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:336:336 [0] NCCL INFO comm 0x354f4200 rank 0 nranks 2 cudaDev 0 busId 40 - Destroy COMPLETE
+22f64f592750:337:337 [1] NCCL INFO comm 0x2089acd0 rank 1 nranks 2 cudaDev 1 busId 50 - Destroy COMPLETE
+22f64f592750:336:336 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+22f64f592750:337:337 [1] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault

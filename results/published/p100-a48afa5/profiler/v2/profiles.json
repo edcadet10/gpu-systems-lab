@@ -1,0 +1,24 @@
+[
+  {
+    "analysis_relative_path": "analysis/residual-rmsnorm-torch.json",
+    "analysis_sha256": "7df10bca522b3d6940818d5672af9d1dc878aedb36ee859f652e72954fb7d456",
+    "provider": "torch",
+    "relative_path": "profiles/residual-rmsnorm-torch.nsys-rep",
+    "sha256": "6a70d70ab6293d40ba3ed3e68e50c59683b1c6e2ea3fe25f758ca595f9b32c44",
+    "size_bytes": 472568,
+    "sqlite_relative_path": "analysis/residual-rmsnorm-torch.sqlite",
+    "sqlite_sha256": "4070b002697c91456f501673fb7b8fccf2b9747575f791b36b364673386808c8",
+    "sqlite_size_bytes": 1323008
+  },
+  {
+    "analysis_relative_path": "analysis/residual-rmsnorm-cuda_extension.json",
+    "analysis_sha256": "480c7f5dd96ba1678b5d899aaa776f65473ec910947e86d6eef6e76adf1a8697",
+    "provider": "cuda_extension",
+    "relative_path": "profiles/residual-rmsnorm-cuda_extension.nsys-rep",
+    "sha256": "d34df044b34ee8c86d65ecbb5ef62f9524b06a821148459ee54ec844e57f9c18",
+    "size_bytes": 489609,
+    "sqlite_relative_path": "analysis/residual-rmsnorm-cuda_extension.sqlite",
+    "sqlite_sha256": "ebb9eff9bb19bae490ca334e7696deda26bab0632e57fa66a3ef372606431d9c",
+    "sqlite_size_bytes": 1327104
+  }
+]

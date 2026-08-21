@@ -1,0 +1,37 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- /kaggle/working/gpu-systems-venv/bin/python
+cachedir: .pytest_cache
+rootdir: /kaggle/working/gpu-systems-lab
+configfile: pyproject.toml
+plugins: cov-7.1.0
+collecting ... collected 13 items / 10 deselected / 3 selected
+
+tests/test_kernel_reference.py::test_triton_matches_reference_on_cuda SKIPPED
+tests/test_kernel_reference.py::test_cuda_extension_matches_reference_on_awkward_cuda_shape [1/2] /usr/local/cuda-12.8/bin/nvcc -MD -MF residual_rmsnorm_cuda.cuda.o.d -DTORCH_EXTENSION_NAME=gpu_systems_lab_residual_rmsnorm_cuda_sm75 -DTORCH_API_INCLUDE_EXTENSION_H -isystem /kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/torch/include -isystem /kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/torch/include/torch/csrc/api/include -isystem /usr/local/cuda-12.8/include -isystem /usr/include/python3.12 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr -gencode=arch=compute_75,code=sm_75 --compiler-options '-fPIC' -O3 -lineinfo -std=c++20 -c /kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu -o residual_rmsnorm_cuda.cuda.o 
+/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu(120): warning #3189-D: "module" is parsed as an identifier rather than a keyword because the tokens that follow it do not match those of a preprocessor directive
+  module
+  ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu(121): warning #3189-D: "module" is parsed as an identifier rather than a keyword because the tokens that follow it do not match those of a preprocessor directive
+    module.def("forward", &residual_rmsnorm_cuda, "Fused residual plus RMSNorm (CUDA, FP16)");
+    ^
+
+/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu(120): warning #3189-D: "module" is parsed as an identifier rather than a keyword because the tokens that follow it do not match those of a preprocessor directive
+  module
+  ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu(121): warning #3189-D: "module" is parsed as an identifier rather than a keyword because the tokens that follow it do not match those of a preprocessor directive
+    module.def("forward", &residual_rmsnorm_cuda, "Fused residual plus RMSNorm (CUDA, FP16)");
+    ^
+
+[2/2] c++ residual_rmsnorm_cuda.cuda.o -shared -L/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda-12.8/lib64 -lcudart -o gpu_systems_lab_residual_rmsnorm_cuda_sm75.so
+PASSED
+tests/test_kernel_reference.py::test_cuda_extension_matches_reference_on_registered_grid PASSED
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_kernel_reference.py:116: the installed Triton release requires compute capability 8.0 or newer
+============ 2 passed, 1 skipped, 10 deselected in 74.21s (0:01:14) ============

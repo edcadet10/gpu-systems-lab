@@ -25,12 +25,17 @@ prove it wrong.
 | --- | --- | --- |
 | Hosted CI | Dependency-free core on Python 3.10–3.14; PyTorch reference/autograd and Triton interpreter on Python 3.12; package and schema checks | CPU logic, operation semantics, packaging, and report-contract behavior |
 | Measurement controls | Fresh-process provider isolation, randomized run schedule, first-use and steady-state timing, environment capture, recursive bundle validation | A reproducible protocol ready to collect reviewable GPU evidence |
-| Hardware evidence | **None published yet** | No target-GPU correctness, latency, profiler, NCCL, or multi-node claim |
+| P100 hardware | [Complete FP16 candidate bundle](results/published/p100-a48afa5/) from five fresh processes, 30 paired shape/run decisions, raw samples, correctness witnesses, and environment logs | The registered CUDA-extension timing claim held on this exact grid and stack; reduction ranges were 58.8%–76.6% |
+| T4 hardware | [Complete FP16 candidate bundle](results/published/t4-a48afa5/) with 30 paired decisions, dual-device topology, a project collective, a pinned upstream diagnostic, and three retained failed attempts | The RMSNorm claim held at 72.6%–83.1%; the project element-zero witness and upstream `nwrong=0` checks held, but differing process models prohibit a speed/agreement claim |
+| P100 trace | [Compatibility-pinned Systems evidence](results/published/p100-a48afa5/profiler/) correlates 20 candidate and 220 eager launches inside the exact 20-operation NVTX ranges | Supports one-versus-eleven launch fusion on the traced shape; no bandwidth, roofline, occupancy, or tensor-core claim |
 
-No GPU speedup is claimed. The development host has no CUDA device or driver. Triton
-interpreter agreement supports the operation-level contract, but bypasses target
-compilation and cannot provide hardware or performance evidence. The empty
-[published-result registry](results/published/README.md) makes that boundary auditable.
+Both hardware claims are intentionally narrow: FP16 forward-only residual-RMSNorm,
+six registered shapes, one device at a time, eager composition as the baseline, and
+the retained steady-state protocol. Worst error-to-allowance ratios were 0.9708 on
+P100 and 0.9689 on T4 against a failure boundary of 1.0. These are not claims about
+other devices, dtypes, backward execution, end-to-end serving, or the kernel's
+mechanism. The [published-result registry](results/published/README.md) separates
+those states.
 
 ## The vertical slice
 
@@ -40,7 +45,7 @@ connects it to the surrounding systems work:
 | Layer | Shipped artifact | Explicit boundary |
 | --- | --- | --- |
 | Numerical contract | Differentiable PyTorch reference with FP32 reduction math | Accelerated path rejects autograd |
-| Kernel | Triton row reduction with masking, launch heuristics, and FP16/BF16/FP32 storage | Contiguous tensors; final dimension at most 64 KiB |
+| Kernels | CUDA FP16 block/warp reduction; Triton row reduction with masking and launch heuristics | Both are forward-only; CUDA needs a local toolkit, Triton 3.5+ needs compute capability 8.0+ |
 | Framework | Safe automatic dispatch and optional `torch.compile` comparator | Direct launch, not yet a structured custom operator |
 | Measurement | Correctness gate, isolated process runs, raw CUDA-event samples, first-use timing, environment/driver state, commit capture, recursive validation | Results apply only to the recorded device and protocol |
 | Modeling | Logical traffic, roofline, and alpha-beta ring calculators | Models expose assumptions; they are not hardware counters or NCCL simulators |
@@ -95,7 +100,12 @@ version matrix separately exercises the dependency-free core on Python 3.10–3.
 ## Run the GPU experiment
 
 On a Linux x86-64 GPU host, install the framework wheel appropriate for the CUDA
-stack, start from a clean commit, then:
+stack and start from a clean commit. The CUDA extension additionally requires a local
+CUDA toolkit with `nvcc`; the `gpu` extra installs its Ninja build dependency. The
+supported Triton releases require NVIDIA compute capability 8.0 or newer; on older
+devices, use the explicit FP16 CUDA provider or the eager reference. Pascal targets
+also require an explicitly selected CUDA 12.6 framework build; see the
+[reproduction guide](docs/reproducing.md#single-gpu-comparison).
 
 ```bash
 python -m pip install -e '.[gpu]'
@@ -108,38 +118,91 @@ gpu-lab-rmsnorm-suite \
   --process-runs 5 \
   --output-dir results/local/rmsnorm-example
 gpu-systems-lab validate-result results/local/rmsnorm-example/manifest.json
+gpu-systems-lab compare-suite \
+  results/local/rmsnorm-example/manifest.json \
+  --candidate triton \
+  --baseline torch_eager \
+  --minimum-reduction-percent 5 \
+  --output results/local/rmsnorm-example/triton-vs-eager.json
+```
+
+The explicit CUDA provider is FP16-only and can be measured in a separate suite:
+
+```bash
+gpu-lab-rmsnorm-suite \
+  --rows 128,1024 \
+  --hidden 1024,4096,8192 \
+  --dtypes float16 \
+  --providers torch_eager,cuda_extension \
+  --process-runs 5 \
+  --output-dir results/local/rmsnorm-cuda-example
+gpu-systems-lab compare-suite \
+  results/local/rmsnorm-cuda-example/manifest.json \
+  --candidate cuda_extension \
+  --baseline torch_eager \
+  --minimum-reduction-percent 5
 ```
 
 The orchestrator shuffles provider/dtype order within each process-level run and
-launches exactly one provider per fresh Python process. Each child must pass its
-finite-error correctness gate before steady-state timing. Reports retain raw samples,
-the first provider invocation, software and device identity, driver/power/clock state,
-seeds, canonical replay commands, protocol, and Git state.
+launches exactly one provider per fresh Python process. Each child must pass a finite,
+scale-aware correctness gate before steady-state timing. The current gate uses the
+framework's documented dtype defaults and records the maximum ratio of observed error
+to `atol + rtol * abs(reference)` plus compact witnesses that the offline validator
+recomputes; any ratio above one fails. Reports retain raw samples, the first provider
+invocation, software and device identity,
+driver/power/clock state, seeds, canonical replay commands, protocol, and Git state.
 
 The validator checks the manifest plus every child file, not just their individual
 schemas. It rejects missing or duplicate schedule entries, path traversal, command or
-commit drift, mismatched seeds/providers/dtypes/shapes, non-finite JSON numbers, and
-contract violations. Publishable suites require a clean Git commit. Use
+commit drift, mismatched seeds/providers/dtypes/shapes or stable environment identity,
+non-finite JSON numbers, and contract violations. Publishable suites require a clean
+Git commit. Use
 `--allow-unversioned` only for local exploration.
+
+The comparison command first validates the entire bundle, then applies the registered
+speed-claim kill criterion to every run, dtype, and shape. It reports `held` only when
+the candidate median is at least 5% lower than the named baseline everywhere; one
+failure reports `retracted`. The output includes the exact per-case boundary and a
+digest binding the manifest and child reports. It does not turn five observed runs
+into a population or future-performance claim. Add `--fail-on-retract` when a CI job
+should return status 1 for a valid comparison that retracts the broad claim.
 
 The first-use number is diagnostic, not part of the speed acceptance rule. It is the
 first invocation of the named provider after tensor setup; non-eager providers run the
 eager reference first for correctness. Steady-state comparisons use the CUDA-event
 samples. See the current
-[RMSNorm report](src/gpu_systems_lab/schemas/rmsnorm-v3.schema.json) and
-[suite manifest](src/gpu_systems_lab/schemas/rmsnorm-suite-v1.schema.json) contracts.
+[RMSNorm report](src/gpu_systems_lab/schemas/rmsnorm-v5.schema.json) and
+[suite manifest](src/gpu_systems_lab/schemas/rmsnorm-suite-v3.schema.json) contracts.
 
 ## Profile the kernel
 
 ```bash
 ./scripts/profile_ncu.sh
 ./scripts/profile_nsys.sh
+GPU_LAB_PROFILE_PROVIDER=torch ./scripts/profile_ncu.sh
+GPU_LAB_PROFILE_PROVIDER=torch ./scripts/profile_nsys.sh
+GPU_LAB_PROFILE_PROVIDER=cuda_extension ./scripts/profile_ncu.sh
+GPU_LAB_PROFILE_PROVIDER=cuda_extension ./scripts/profile_nsys.sh
 ```
 
 The first recipe collects roofline, memory-workload, occupancy, and launch sections.
 The second captures the CUDA/NVTX timeline. Reports go below ignored `artifacts/`;
-profiler collection is kept separate from latency measurement because it perturbs the
-run.
+provider-specific names prevent comparisons from overwriting one another. Profiler
+collection is kept separate from latency measurement because it perturbs the run.
+
+Export a Systems report to SQLite, then reproduce kernel launches correlated to one
+named NVTX range:
+
+```bash
+nsys export --type sqlite --output residual-rmsnorm.sqlite \
+  artifacts/nsys/residual-rmsnorm-cuda_extension.nsys-rep
+gpu-systems-lab analyze-nsys residual-rmsnorm.sqlite \
+  --nvtx-range residual_rmsnorm:cuda_extension
+```
+
+The analyzer opens SQLite read-only, requires exactly one matching range, and joins
+CUDA runtime launch calls on that range's thread to kernel activities by correlation
+ID. It reports a SHA-256 binding to the input export.
 
 ## Exercise the collective path
 
@@ -174,7 +237,8 @@ assumptions.
 
 ```text
 src/gpu_systems_lab/
-├── kernels/            # PyTorch contract and Triton implementation
+├── csrc/               # CUDA extension source
+├── kernels/            # PyTorch contract, CUDA binding, and Triton implementation
 ├── benchmarks/         # correctness-gated single-GPU timing
 ├── benchmark_suite.py  # isolated, randomized process-level orchestration
 ├── result_validation.py # schema and cross-file bundle validation

@@ -1,0 +1,4 @@
+# Preserve checksum-protected runner outputs byte for byte.
+results/published/**/raw/** -whitespace
+results/published/**/attempts/** -whitespace
+results/published/**/profiler/v[0-9]/** -whitespace

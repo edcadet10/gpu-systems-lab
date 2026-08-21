@@ -56,6 +56,90 @@ the operation-level contract but cannot establish GPU code generation or latency
 CUDA events do not make a shared or contended device exclusive, so device isolation
 and a retained raw distribution remain part of the measurement boundary.
 
+PyTorch's official
+[`torch.utils.cpp_extension` documentation](https://docs.pytorch.org/docs/stable/cpp_extension.html)
+defines the just-in-time CUDA build path used by the explicit extension provider.
+NVIDIA's [CUDA Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/)
+prioritizes coalesced global access, while the
+[CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/)
+defines the synchronized warp shuffles used by its reduction. Current Triton lists
+NVIDIA compute capability 8.0 and later in its
+[compatibility boundary](https://github.com/triton-lang/triton#compatibility); the CUDA
+provider exists in part to make older-device experiments explicit rather than
+silently treating interpreter success as target support.
+PyTorch's maintained
+[release compatibility matrix](https://github.com/pytorch/pytorch/blob/main/RELEASE.md#release-compatibility-matrix)
+records that its CUDA 12.6 build retains Pascal compute capability 6.0 while CUDA 13
+starts at Turing 7.5. The official
+[version installer](https://pytorch.org/get-started/previous-versions/) exposes the
+CUDA 12.6 wheel index used to make that choice explicit.
+
+**Design implication:** the CUDA source ships in the wheel, compiles lazily for the
+visible architecture, uses the current PyTorch stream, and is limited to contiguous
+FP16 forward tensors. Compiler/toolkit identity and the first-use build cost remain
+part of the retained environment and timing evidence. Pascal experiments pin the
+CUDA 12.6 framework build rather than relying on the default package index.
+
+**Disconfirming evidence:** coalescing and fusion do not guarantee a win. The kernel
+loads input and residual twice, a block owns an entire row, and runtime compilation
+introduces a cache-sensitive setup cost. Correctness, isolated timing, and hardware
+profiling must decide whether those tradeoffs hold on each recorded GPU.
+The first P100 suite attempt at commit `9c3c52e` compiled but exceeded its registered
+FP16 absolute-error gate on shape `(1024, 4096)` (`0.00390625 > 0.002`) before timing.
+A compensated-summation replacement at `c3fcf8b` still found one differing FP16 element
+among 4,194,304, with the same one-step absolute difference and relative error
+`0.0006823539`; it also stopped before timing. Both absolute-gate claims remain
+retracted.
+
+Those failures exposed a contract problem separately from a kernel problem: FP16
+spacing scales with magnitude, so one representable step can exceed a fixed absolute
+threshold. PyTorch's official
+[`assert_close` documentation](https://docs.pytorch.org/docs/stable/testing) instead
+defines a combined absolute-relative relation and publishes strict defaults per dtype.
+The v5 report adopts that relation, records the maximum error-to-allowance ratio, and
+retains v3/v4 validation so failed historical runs are never reinterpreted.
+
+**New-series hardware result:** after the v5 rule was publicly registered, the
+canonical P100 rerun at commit `a48afa5` passed all six shapes in each of five fresh
+processes. Its worst error-to-allowance ratio was `0.9707606881`, close to the failure
+line of one. All 30 paired timing decisions also cleared the registered 5% reduction
+line versus eager composition; observed per-shape reduction ranges across the five
+medians were 58.8%–76.6%. The complete
+[candidate bundle](../results/published/p100-a48afa5/) retains every raw sample and
+the exact comparison decision.
+
+That timing bundle alone does not establish the proposed mechanism. The corrected
+Nsight Compute command reached the target but the hosted platform denied GPU
+performance-counter access, and the image did not ship Systems. Those failures are
+retained. A separately registered, SHA-pinned Systems follow-up first produced NVTX
+but zero CUDA events. The tool's official
+[release notes](https://docs.nvidia.com/nsight-systems/ReleaseNotes/index.html#deprecated-features)
+then falsified the selection assumption: releases starting with 2025.4 no longer
+support Pascal or Volta. A pre-registered 2025.3.1 rerun captured nonzero CUDA
+activity. Correlation inside the exact 20-operation NVTX ranges found 20 launches for
+the explicit provider and 220 for eager composition. This supports launch fusion on
+the traced P100 shape, but still does not establish achieved bytes, bandwidth,
+occupancy, or roofline position.
+
+**Second-generation result:** the same registered FP16 rule held in all 30 decisions
+on one GPU of a dual-T4 allocation at commit `a48afa5`; per-shape reduction ranges
+were 72.6%–83.1%, and the worst error-to-allowance ratio was `0.9688795876`. The
+[complete T4 bundle](../results/published/t4-a48afa5/) also retains matching
+element-zero witnesses across the two project ranks and `nwrong=0`
+out-of-place/in-place output checks from pinned `nccl-tests`. The measured-commit
+project runner did not inspect every output
+element, so no full-tensor correctness claim is attached to that historical result;
+the current runner closes that gap with a full-tensor extrema check.
+
+Those collective timings are diagnostics, not a comparison. The project uses two
+processes with one GPU each and reports the maximum rank latency per iteration; the
+upstream run uses one process and one thread driving two GPUs. The successful
+allocation also selected different NCCL direct-mode behavior from two earlier
+allocations. The registered escape condition therefore applies: without aligned
+process and timing semantics, no agreement percentage or speed claim is computed.
+Three failed runner attempts—wrong allocation, incompatible NCCL link, and a stripped
+driver-library path—remain beside the successful evidence rather than being omitted.
+
 ## Reproducibility and report contracts
 
 NVIDIA's
@@ -89,7 +173,10 @@ The [CUDA programming guide](https://docs.nvidia.com/cuda/cuda-programming-guide
 covers the execution, memory, stream, event, graph, and multi-GPU abstractions below
 the framework. The
 [Nsight Systems guide](https://docs.nvidia.com/nsight-systems/UserGuide/index.html)
-documents CUDA and NVTX tracing.
+documents CUDA and NVTX tracing. Its
+[post-collection guide](https://docs.nvidia.com/nsight-systems/AnalysisGuide/index.html#common-sqlite-examples)
+defines the runtime-to-kernel correlation-ID join and the serialized HW/VM/PID/TID
+identifier layout used by the checked-in range analyzer.
 
 **Design implication:** the model exposes its units and assumptions, while scripts
 collect the hardware counters needed to challenge it.

@@ -1,0 +1,45 @@
+make -C src build BUILDDIR=/kaggle/working/nccl-tests/build
+make[1]: Entering directory '/kaggle/working/nccl-tests/src'
+make[2]: Entering directory '/kaggle/working/nccl-tests/os'
+Compiling  timer.cc                            > /kaggle/working/nccl-tests/build/timer.o
+Compiling  linux.cc                            > /kaggle/working/nccl-tests/build/os/linux.o
+Compiling /kaggle/working/nccl-tests/build/verifiable/verifiable.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Creating archive /kaggle/working/nccl-tests/build/os/linux.o > /kaggle/working/nccl-tests/build/os/libnccl_test_os.a
+make[2]: Leaving directory '/kaggle/working/nccl-tests/os'
+Compiling  all_reduce.cu                       > /kaggle/working/nccl-tests/build/all_reduce.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  common.cu                           > /kaggle/working/nccl-tests/build/common.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  util.cu                             > /kaggle/working/nccl-tests/build/util.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  all_gather.cu                       > /kaggle/working/nccl-tests/build/all_gather.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  broadcast.cu                        > /kaggle/working/nccl-tests/build/broadcast.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  reduce_scatter.cu                   > /kaggle/working/nccl-tests/build/reduce_scatter.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  reduce.cu                           > /kaggle/working/nccl-tests/build/reduce.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  alltoall.cu                         > /kaggle/working/nccl-tests/build/alltoall.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  alltoallv.cu                        > /kaggle/working/nccl-tests/build/alltoallv.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  scatter.cu                          > /kaggle/working/nccl-tests/build/scatter.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  gather.cu                           > /kaggle/working/nccl-tests/build/gather.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  sendrecv.cu                         > /kaggle/working/nccl-tests/build/sendrecv.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Compiling  hypercube.cu                        > /kaggle/working/nccl-tests/build/hypercube.o
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+Linking  /kaggle/working/nccl-tests/build/all_reduce.o > /kaggle/working/nccl-tests/build/all_reduce_perf
+nvcc warning : Support for offline compilation for architectures prior to '<compute/sm/lto>_75' will be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+/usr/bin/ld: /kaggle/working/nccl-tests/build/all_reduce.o: in function `AllReduceGetDevCommRequirements(int, ncclDevCommRequirements*, ncclComm*)':
+/kaggle/working/nccl-tests/src/all_reduce.cu:73: undefined reference to `ncclCommQueryProperties'
+/usr/bin/ld: /kaggle/working/nccl-tests/src/all_reduce.cu:77: undefined reference to `ncclTeamLsa'
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:88: /kaggle/working/nccl-tests/build/all_reduce_perf] Error 1
+make[1]: *** Waiting for unfinished jobs....
+make[1]: Leaving directory '/kaggle/working/nccl-tests/src'
+make: *** [Makefile:20: src.build] Error 2

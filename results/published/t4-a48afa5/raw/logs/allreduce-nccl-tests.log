@@ -1,0 +1,84 @@
+# Writing JSON output to /kaggle/working/gpu-systems-evidence-t4/allreduce-nccl-tests.json
+# nccl-tests version 2.19.7 nccl-headers=22903 nccl-library=22903
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 2 minBytes 134217728 maxBytes 134217728 step: 2(factor) warmup iters: 10 iters: 50 agg iters: 1 validation: 1 graph: 0 unalign: 0
+# Per-Iteration Report: CUDA event timing; i_* uses max over process rows 
+#
+# Using devices
+#  Rank  0 Group  0 Pid   1718 on 22f64f592750 device  0 [0000:00:04] Tesla T4
+#  Rank  1 Group  0 Pid   1718 on 22f64f592750 device  1 [0000:00:05] Tesla T4
+22f64f592750:1718:1718 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+22f64f592750:1718:1718 [0] NCCL INFO Bootstrap: Using eth0:172.19.2.2<0>
+22f64f592750:1718:1718 [0] NCCL INFO cudaDriverVersion 13000
+22f64f592750:1718:1718 [0] NCCL INFO NCCL version 2.29.3+cuda12.9
+22f64f592750:1718:1718 [0] NCCL INFO NCCL git version stable dcf2a2fbe
+22f64f592750:1718:1718 [0] NCCL INFO Comm config nvlinkCentricSched set to 1
+22f64f592750:1718:1718 [1] NCCL INFO Comm config nvlinkCentricSched set to 1
+22f64f592750:1718:1724 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+22f64f592750:1718:1724 [1] NCCL INFO NET/IB : No device found.
+22f64f592750:1718:1724 [1] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.19.2.2<0>
+22f64f592750:1718:1724 [1] NCCL INFO Failed to initialize NET plugin IB
+22f64f592750:1718:1724 [1] NCCL INFO NET/Socket : Using [0]eth0:172.19.2.2<0>
+22f64f592750:1718:1724 [1] NCCL INFO Initialized NET plugin Socket
+22f64f592750:1718:1724 [1] NCCL INFO Assigned NET plugin Socket to comm
+22f64f592750:1718:1724 [1] NCCL INFO Using network Socket
+22f64f592750:1718:1723 [0] NCCL INFO Initialized NET plugin Socket
+22f64f592750:1718:1723 [0] NCCL INFO Assigned NET plugin Socket to comm
+22f64f592750:1718:1723 [0] NCCL INFO Using network Socket
+22f64f592750:1718:1724 [1] NCCL INFO [Rank 1] ncclCommInitRankConfig comm 0x58a889350c00 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 50 commId 0x819150df72b57a88 - Init START
+22f64f592750:1718:1723 [0] NCCL INFO [Rank 0] ncclCommInitRankConfig comm 0x58a88923f660 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 40 commId 0x819150df72b57a88 - Init START
+22f64f592750:1718:1723 [0] NCCL INFO RAS client listening socket at ::1<28028>
+22f64f592750:1718:1723 [0] NCCL INFO Bootstrap timings total 0.001403 (create 0.000052, send 0.000184, recv 0.000213, ring 0.000066, delay 0.000000)
+22f64f592750:1718:1724 [1] NCCL INFO Bootstrap timings total 0.001439 (create 0.000064, send 0.000205, recv 0.000300, ring 0.000044, delay 0.000000)
+22f64f592750:1718:1723 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-3. (GPU affinity = 0-3 ; CPU affinity = 0-3).
+22f64f592750:1718:1723 [0] NCCL INFO NVLS multicast support is not available on dev 0 (NVLS_NCHANNELS 0)
+22f64f592750:1718:1724 [1] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is 0-3. (GPU affinity = 0-3 ; CPU affinity = 0-3).
+22f64f592750:1718:1724 [1] NCCL INFO NVLS multicast support is not available on dev 1 (NVLS_NCHANNELS 0)
+22f64f592750:1718:1723 [0] NCCL INFO comm 0x58a88923f660 rank 0 nRanks 2 nNodes 1 localRanks 2 localRank 0 MNNVL 0
+22f64f592750:1718:1724 [1] NCCL INFO comm 0x58a889350c00 rank 1 nRanks 2 nNodes 1 localRanks 2 localRank 1 MNNVL 0
+22f64f592750:1718:1723 [0] NCCL INFO Channel 00/02 : 0 1
+22f64f592750:1718:1723 [0] NCCL INFO Channel 01/02 : 0 1
+22f64f592750:1718:1723 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1
+22f64f592750:1718:1723 [0] NCCL INFO P2P Chunksize set to 131072
+22f64f592750:1718:1724 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] -1/-1/-1->1->0
+22f64f592750:1718:1724 [1] NCCL INFO P2P Chunksize set to 131072
+22f64f592750:1718:1723 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+22f64f592750:1718:1723 [0] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 1 isAllCudaP2p 0
+22f64f592750:1718:1724 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+22f64f592750:1718:1724 [1] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 1 isAllCudaP2p 0
+22f64f592750:1718:1726 [0] NCCL INFO [Proxy Service] Device 0 CPU core 3
+22f64f592750:1718:1727 [0] NCCL INFO [Proxy Service] Device 1 CPU core 2
+22f64f592750:1718:1729 [0] NCCL INFO [Proxy Service UDS] Device 1 CPU core 3
+22f64f592750:1718:1728 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 2
+22f64f592750:1718:1723 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+22f64f592750:1718:1724 [1] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+22f64f592750:1718:1724 [1] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+22f64f592750:1718:1724 [1] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 1
+22f64f592750:1718:1723 [0] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+22f64f592750:1718:1723 [0] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+22f64f592750:1718:1723 [0] NCCL INFO Symmetric memory is not supported. cuMemEnable 1, ginSupport 0, globalNicFused 1
+22f64f592750:1718:1723 [0] NCCL INFO CC Off, workFifoBytes 1048576
+22f64f592750:1718:1723 [0] NCCL INFO ncclCommInitRankConfig comm 0x58a88923f660 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 40 commId 0x819150df72b57a88 - Init COMPLETE
+22f64f592750:1718:1723 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 2 total 0.43 (kernels 0.37, alloc 0.04, bootstrap 0.00, allgathers 0.00, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+22f64f592750:1718:1724 [1] NCCL INFO ncclCommInitRankConfig comm 0x58a889350c00 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 50 commId 0x819150df72b57a88 - Init COMPLETE
+22f64f592750:1718:1724 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 1 nranks 2 total 0.43 (kernels 0.36, alloc 0.04, bootstrap 0.00, allgathers 0.00, topo 0.02, graphs 0.00, connections 0.00, rest 0.00)
+#
+#                                                                 out-of-place (+ per-iteration)                                in-place (+ per-iteration)
+#       size         count      type   redop    root     time   algbw   busbw  #wrong    i_min    i_max    i_p99    i_cv%     time   algbw   busbw  #wrong    i_min    i_max    i_p99    i_cv% 
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)     (us)     (us)      (%)     (us)  (GB/s)  (GB/s)             (us)     (us)     (us)      (%) 
+22f64f592750:1718:1731 [0] NCCL INFO Channel 00 : 0[0] -> 1[1] via SHM/direct/direct
+22f64f592750:1718:1731 [0] NCCL INFO Channel 01 : 0[0] -> 1[1] via SHM/direct/direct
+22f64f592750:1718:1730 [1] NCCL INFO Channel 00 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:1718:1730 [1] NCCL INFO Channel 01 : 1[1] -> 0[0] via SHM/direct/direct
+22f64f592750:1718:1731 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+22f64f592750:1718:1730 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+   134217728      67108864      half     sum      -1  23418.7    5.73    5.73       0  23194.6  23677.3  23677.3     0.49  23475.4    5.72    5.72       0  23258.4  23697.4  23697.4     0.47
+22f64f592750:1718:1718 [0] NCCL INFO comm 0x58a88923f660 rank 0 nranks 2 cudaDev 0 busId 40 - Destroy COMPLETE
+22f64f592750:1718:1718 [1] NCCL INFO comm 0x58a889350c00 rank 1 nranks 2 cudaDev 1 busId 50 - Destroy COMPLETE
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 5.7243 
+#
+# Collective test concluded: all_reduce_perf
+#
+
+22f64f592750:1718:1718 [1] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault

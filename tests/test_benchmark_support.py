@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
+from importlib import import_module
+from threading import Event
+from time import sleep
 from types import SimpleNamespace
 from typing import Any
 
@@ -15,14 +19,18 @@ from gpu_systems_lab.benchmark_inputs import (
     positive_integer_list,
 )
 from gpu_systems_lab.benchmarks.residual_rmsnorm import (
+    _correctness_metrics,
+    _cuda_compiler_metadata,
     _require_correctness,
     _time_first_call,
+    run_benchmark,
 )
 from gpu_systems_lab.benchmarks.residual_rmsnorm import (
     main as rmsnorm_main,
 )
 from gpu_systems_lab.distributed.benchmark_allreduce import (
     _assert_collective_correctness,
+    _tensor_extrema,
 )
 from gpu_systems_lab.distributed.benchmark_allreduce import (
     main as allreduce_main,
@@ -33,6 +41,8 @@ from gpu_systems_lab.reporting import (
     nvidia_smi_metadata,
     runtime_metadata,
 )
+
+cuda_extension_module = import_module("gpu_systems_lab.kernels.residual_rmsnorm_cuda")
 
 
 @pytest.mark.parametrize(("value", "expected"), [("1", 1), (" 17 ", 17)])
@@ -174,6 +184,69 @@ class _FakeCuda:
         self.synchronizations += 1
 
 
+class _FakeVisibleCuda:
+    capabilities = ((7, 5), (6, 0), (7, 5))
+
+    def device_count(self) -> int:
+        return len(self.capabilities)
+
+    def get_device_capability(self, index: int) -> tuple[int, int]:
+        return self.capabilities[index]
+
+
+def test_cuda_compiler_metadata_records_unique_visible_architectures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("TORCH_CUDA_ARCH_LIST", raising=False)
+    monkeypatch.setattr("gpu_systems_lab.benchmarks.residual_rmsnorm.shutil.which", lambda _: None)
+    framework = SimpleNamespace(cuda=_FakeVisibleCuda())
+
+    metadata = _cuda_compiler_metadata(framework)
+
+    assert metadata["cuda_arch_list"] == "6.0;7.5"
+
+
+def test_cuda_compiler_metadata_preserves_architecture_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TORCH_CUDA_ARCH_LIST", "7.5+PTX")
+    monkeypatch.setattr("gpu_systems_lab.benchmarks.residual_rmsnorm.shutil.which", lambda _: None)
+    framework = SimpleNamespace(cuda=_FakeVisibleCuda())
+
+    metadata = _cuda_compiler_metadata(framework)
+
+    assert metadata["cuda_arch_list"] == "7.5+PTX"
+
+
+def test_cuda_extension_first_build_is_serialized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = 0
+    extension = object()
+    start = Event()
+
+    def compile_extension(_compute_capability: tuple[int, int]) -> object:
+        nonlocal calls
+        calls += 1
+        sleep(0.05)
+        return extension
+
+    monkeypatch.setattr(cuda_extension_module, "_EXTENSION_MODULES", {})
+    monkeypatch.setattr(cuda_extension_module, "_compile_cuda_extension", compile_extension)
+
+    def load_extension() -> object:
+        start.wait()
+        return cuda_extension_module._load_cuda_extension((7, 5))
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(load_extension) for _ in range(4)]
+        start.set()
+        loaded = [future.result() for future in futures]
+
+    assert loaded == [extension] * 4
+    assert calls == 1
+
+
 def test_first_call_timer_synchronizes_around_host_clock() -> None:
     cuda = _FakeCuda()
     framework = SimpleNamespace(cuda=cuda)
@@ -190,14 +263,71 @@ def test_first_call_timer_synchronizes_around_host_clock() -> None:
     assert cuda.synchronizations == 2
 
 
-@pytest.mark.parametrize("error", [float("nan"), float("inf"), 0.003])
-def test_correctness_gate_rejects_nonfinite_or_large_error(error: float) -> None:
+@pytest.mark.parametrize("ratio", [float("nan"), float("inf"), 1.0001])
+def test_correctness_gate_rejects_nonfinite_or_large_error_ratio(ratio: float) -> None:
     with pytest.raises(AssertionError, match="failed correctness"):
-        _require_correctness("triton", (2, 17), error, 0.002)
+        _require_correctness("triton", (2, 17), 0.001, ratio)
 
 
-def test_correctness_gate_accepts_finite_error_at_tolerance() -> None:
-    _require_correctness("triton", (2, 17), 0.002, 0.002)
+@pytest.mark.parametrize("absolute_error", [float("nan"), float("inf")])
+def test_correctness_gate_rejects_nonfinite_absolute_error(absolute_error: float) -> None:
+    with pytest.raises(AssertionError, match="failed correctness"):
+        _require_correctness("triton", (2, 17), absolute_error, 0.5)
+
+
+def test_correctness_gate_accepts_finite_error_at_ratio_boundary() -> None:
+    _require_correctness("triton", (2, 17), 0.00390625, 1.0)
+
+
+def test_scale_aware_metrics_allow_one_fp16_step_at_large_magnitude() -> None:
+    torch = pytest.importorskip("torch")
+    reference = torch.tensor([5.0], dtype=torch.float16)
+    candidate = torch.nextafter(reference, torch.tensor([float("inf")], dtype=torch.float16))
+
+    metrics = _correctness_metrics(candidate, reference, "float16")
+
+    assert metrics["max_absolute_error"] == 0.00390625
+    assert float(metrics["max_error_ratio"]) < 1
+    assert metrics["max_absolute_error_reference_magnitude"] == 5.0
+    assert metrics["max_error_ratio_absolute_error"] == 0.00390625
+    assert metrics["max_error_ratio_reference_magnitude"] == 5.0
+
+
+def test_scale_aware_metrics_reject_material_near_zero_error() -> None:
+    torch = pytest.importorskip("torch")
+    reference = torch.tensor([0.0], dtype=torch.float16)
+    candidate = torch.tensor([1e-4], dtype=torch.float16)
+
+    metrics = _correctness_metrics(candidate, reference, "float16")
+
+    assert float(metrics["max_error_ratio"]) > 1
+
+
+def test_scale_aware_metrics_retain_distinct_maximum_witnesses() -> None:
+    torch = pytest.importorskip("torch")
+    reference = torch.tensor([100.0, 0.0], dtype=torch.float32)
+    candidate = torch.tensor([100.0001, 9e-6], dtype=torch.float32)
+
+    metrics = _correctness_metrics(candidate, reference, "float32")
+
+    assert float(metrics["max_absolute_error"]) > 9e-5
+    assert metrics["max_absolute_error_reference_magnitude"] == 100.0
+    assert float(metrics["max_error_ratio_absolute_error"]) < 1e-5
+    assert metrics["max_error_ratio_reference_magnitude"] == 0.0
+
+
+def test_cuda_extension_benchmark_rejects_non_fp16_before_device_setup() -> None:
+    with pytest.raises(ValueError, match="CUDA extension provider supports float16"):
+        run_benchmark(
+            rows=[2],
+            hidden_sizes=[17],
+            dtype_name="bfloat16",
+            providers=["cuda_extension"],
+            warmup=1,
+            repeats=1,
+            seed=17,
+            epsilon=1e-6,
+        )
 
 
 def test_rmsnorm_cli_surfaces_runtime_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -261,7 +391,8 @@ def test_collective_correctness_consensus_passes_on_every_rank() -> None:
     _assert_collective_correctness(
         _FakeTorch,
         distributed,
-        observed=2.0,
+        observed_min=2.0,
+        observed_max=2.0,
         expected=2.0,
         device="cuda:0",
         rank=0,
@@ -270,11 +401,16 @@ def test_collective_correctness_consensus_passes_on_every_rank() -> None:
 
 
 @pytest.mark.parametrize(
-    ("observed", "peer_status", "message"),
-    [(1.0, 1, "rank 0 observed"), (2.0, 0, "peer rank failed")],
+    ("observed_min", "observed_max", "peer_status", "message"),
+    [
+        (1.0, 2.0, 1, "rank 0 observed range"),
+        (2.0, 3.0, 1, "rank 0 observed range"),
+        (2.0, 2.0, 0, "peer rank failed"),
+    ],
 )
 def test_collective_correctness_consensus_fails_every_rank(
-    observed: float,
+    observed_min: float,
+    observed_max: float,
     peer_status: int,
     message: str,
 ) -> None:
@@ -283,9 +419,20 @@ def test_collective_correctness_consensus_fails_every_rank(
         _assert_collective_correctness(
             _FakeTorch,
             distributed,
-            observed=observed,
+            observed_min=observed_min,
+            observed_max=observed_max,
             expected=2.0,
             device="cuda:0",
             rank=0,
         )
     assert distributed.calls == 1
+
+
+class _FakeExtremaTorch:
+    @staticmethod
+    def aminmax(tensor: list[float]) -> tuple[float, float]:
+        return min(tensor), max(tensor)
+
+
+def test_collective_correctness_extrema_expose_nonfirst_mismatch() -> None:
+    assert _tensor_extrema(_FakeExtremaTorch, [2.0, 1.0, 2.0]) == (1.0, 2.0)

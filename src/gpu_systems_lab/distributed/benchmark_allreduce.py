@@ -43,18 +43,26 @@ def _allreduce_once(distributed: Any, tensor: Any) -> None:
     distributed.all_reduce(tensor)
 
 
+def _tensor_extrema(torch: Any, tensor: Any) -> tuple[float, float]:
+    """Return extrema so correctness covers every element without a full host copy."""
+
+    observed_min, observed_max = torch.aminmax(tensor)
+    return float(observed_min), float(observed_max)
+
+
 def _assert_collective_correctness(
     torch: Any,
     distributed: Any,
     *,
-    observed: float,
+    observed_min: float,
+    observed_max: float,
     expected: float,
     device: Any,
     rank: int,
 ) -> None:
     """Make every rank agree that correctness passed before any rank raises."""
 
-    local_ok = observed == expected
+    local_ok = observed_min == expected and observed_max == expected
     all_ranks_ok = torch.tensor(
         1 if local_ok else 0,
         dtype=torch.int32,
@@ -66,7 +74,10 @@ def _assert_collective_correctness(
     if local_ok:
         detail = f"rank {rank} matched locally, but at least one peer rank failed"
     else:
-        detail = f"rank {rank} observed {observed}, expected {expected}"
+        detail = (
+            f"rank {rank} observed range [{observed_min}, {observed_max}], "
+            f"expected every element to equal {expected}"
+        )
     raise AssertionError(f"all-reduce correctness failed: {detail}")
 
 
@@ -172,11 +183,12 @@ def run(
         expected = float(world_size)
         _allreduce_once(distributed, tensor)
         torch.cuda.synchronize()
-        observed = float(tensor[0])
+        observed_min, observed_max = _tensor_extrema(torch, tensor)
         _assert_collective_correctness(
             torch,
             distributed,
-            observed=observed,
+            observed_min=observed_min,
+            observed_max=observed_max,
             expected=expected,
             device=tensor.device,
             rank=rank,
@@ -220,7 +232,7 @@ def run(
             world_size=world_size,
             message_bytes=message_bytes,
             dtype_name=dtype_name,
-            observed=observed,
+            observed=observed_min,
             expected=expected,
             critical_path_samples=critical_path_samples,
             warmup=warmup,

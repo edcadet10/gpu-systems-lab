@@ -1,0 +1,7 @@
+{
+  "cuDeviceGetCount": 0,
+  "cuDriverGetVersion": 0,
+  "cuInit": 0,
+  "device_count": 2,
+  "driver_version": 13000
+}

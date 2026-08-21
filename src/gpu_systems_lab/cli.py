@@ -13,7 +13,9 @@ from gpu_systems_lab.models import (
     estimate_ring_allreduce,
     estimate_roofline,
 )
+from gpu_systems_lab.profiling.nsys_sqlite import NsightAnalysisError, analyze_nsys_sqlite
 from gpu_systems_lab.result_validation import ReportValidationError, validate_result_bundle_path
+from gpu_systems_lab.suite_analysis import SuiteAnalysisError, compare_suite
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -52,6 +54,29 @@ def _parser() -> argparse.ArgumentParser:
         help="validate a benchmark report against its versioned schema",
     )
     validate.add_argument("path", type=Path)
+
+    compare = subparsers.add_parser(
+        "compare-suite",
+        help="apply a pre-registered speed-claim criterion to a valid suite",
+    )
+    compare.add_argument("path", type=Path)
+    compare.add_argument("--candidate", required=True)
+    compare.add_argument("--baseline", required=True)
+    compare.add_argument("--minimum-reduction-percent", type=float, default=5.0)
+    compare.add_argument("--output", type=Path)
+    compare.add_argument(
+        "--fail-on-retract",
+        action="store_true",
+        help="return exit status 1 when the broad claim is retracted",
+    )
+
+    nsys = subparsers.add_parser(
+        "analyze-nsys",
+        help="summarize CUDA kernel launches inside one NVTX range",
+    )
+    nsys.add_argument("path", type=Path, help="SQLite export produced by nsys")
+    nsys.add_argument("--nvtx-range", required=True)
+    nsys.add_argument("--output", type=Path)
     return parser
 
 
@@ -76,6 +101,45 @@ def main(argv: Sequence[str] | None = None) -> int:
                 sort_keys=True,
             )
         )
+        return 0
+    if args.command == "compare-suite":
+        try:
+            comparison = compare_suite(
+                args.path,
+                candidate=args.candidate,
+                baseline=args.baseline,
+                minimum_reduction_percent=args.minimum_reduction_percent,
+            )
+        except (ReportValidationError, SuiteAnalysisError, RuntimeError) as error:
+            print(f"invalid comparison: {error}", file=sys.stderr)
+            return 2
+        serialized = json.dumps(comparison, indent=2, sort_keys=True, allow_nan=False)
+        if args.output:
+            try:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(serialized + "\n", encoding="utf-8")
+            except OSError as error:
+                print(f"could not write comparison: {error}", file=sys.stderr)
+                return 2
+        else:
+            print(serialized)
+        return 1 if args.fail_on_retract and comparison["broad_claim_status"] == "retracted" else 0
+    if args.command == "analyze-nsys":
+        try:
+            analysis = analyze_nsys_sqlite(args.path, nvtx_range=args.nvtx_range)
+        except (NsightAnalysisError, OSError) as error:
+            print(f"invalid trace export: {error}", file=sys.stderr)
+            return 2
+        serialized = json.dumps(analysis, indent=2, sort_keys=True, allow_nan=False)
+        if args.output:
+            try:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(serialized + "\n", encoding="utf-8")
+            except OSError as error:
+                print(f"could not write trace analysis: {error}", file=sys.stderr)
+                return 2
+        else:
+            print(serialized)
         return 0
     if args.command == "traffic":
         result = estimate_residual_rmsnorm_traffic(args.rows, args.hidden, args.element_bytes)

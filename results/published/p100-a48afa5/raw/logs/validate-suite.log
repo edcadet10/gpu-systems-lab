@@ -1,0 +1,7 @@
+{
+  "benchmark_type": "residual_rmsnorm_suite",
+  "schema_file": "rmsnorm-suite-v3.schema.json",
+  "schema_version": 3,
+  "valid": true,
+  "validated_reports": 11
+}

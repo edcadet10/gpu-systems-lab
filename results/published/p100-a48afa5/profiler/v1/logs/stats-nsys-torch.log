@@ -1,0 +1,8 @@
+Generating SQLite file /kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.sqlite from /kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.nsys-rep
+Processing [/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.sqlite] with [/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+SKIPPED: /kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.sqlite does not contain CUDA kernel data.
+
+Processing [/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.sqlite] with [/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/reports/nvtx_sum.py]... 
+Time (%),Total Time (ns),Instances,Avg (ns),Med (ns),Min (ns),Max (ns),StdDev (ns),Style,Range
+100.0,3582391,1,3582391.0,3582391.0,3582391,3582391,0.0,PushPop,:residual_rmsnorm:torch
+

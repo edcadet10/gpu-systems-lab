@@ -6,6 +6,45 @@ environment, shapes, and protocol.
 
 ## [Unreleased]
 
+### Added
+
+- Add `compare-suite`, an auditable evaluator for the pre-registered per-run,
+  per-dtype, per-shape speed-claim boundary with a complete-bundle digest.
+- Add an explicit, lazily compiled FP16 CUDA extension provider with a one-block-per-row
+  reduction and selectable Nsight profiling targets.
+- Add RMSNorm reports v4/v5 and suite manifests v2/v3 for the new provider and
+  scale-aware correctness evidence while retaining validation support for v3/v4 and
+  v1/v2 history.
+- Publish checksum-protected P100 and T4 candidate bundles with every raw sample,
+  recomputable 30-decision comparisons, hardware/software boundaries, and retained
+  failed attempts.
+- Add a project element-zero witness and pinned-upstream `nwrong=0` dual-T4
+  diagnostics while explicitly withholding a cross-tool claim because their
+  execution models differ.
+- Add a read-only Systems SQLite analyzer that correlates CUDA runtime launches inside
+  an exact NVTX range and binds its result to the input digest.
+- Publish a compatibility-pinned P100 trace showing one CUDA-extension launch versus
+  eleven eager launches per operation, while retaining the newer tool's zero-CUDA
+  negative result and withholding unsupported counter claims.
+
+### Fixed
+
+- Reject RMSNorm reports whose recorded maximum error exceeds their recorded
+  tolerance, even when the JSON shape remains schema-valid.
+- Reject cross-environment suites and percentage comparisons with non-positive median
+  durations; evaluate comparison boundaries from bounded, exact JSON decimal literals.
+- Serialize first-use extension builds, isolate cache names by compute capability,
+  gate unsupported Triton targets, and preserve provider-specific profiler outputs.
+- Use Nsight Compute's supported `--export` option and test both profiler command
+  builders with provider-specific report paths.
+- Validate collective correctness across the full tensor via its extrema instead of
+  sampling only element zero before the all-rank consensus.
+- Replace the current absolute-only numerical gate with the framework-documented
+  absolute-relative relation, recording a maximum error-to-allowance ratio; historical
+  report versions keep their original decisions.
+- Add compensated FP32 square summation after a P100 wide-row correctness failure; a
+  second absolute-gate failure remains recorded rather than being retroactively passed.
+
 ## [0.2.0] - 2026-08-20
 
 ### Added

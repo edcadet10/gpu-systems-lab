@@ -1,0 +1,366 @@
+{
+  "nsys_package_sha256": "7ce66e0acc3891e52ba642045d7b314bdd1a1f9b74385e5ea0e985adc971a44b",
+  "nsys_package_url": "https://developer.nvidia.com/downloads/assets/tools/secure/nsight-systems/2026_2/NsightSystems-linux-cli-public-2026.2.1.210-3763964.deb",
+  "observed_nsys_package_sha256": "7ce66e0acc3891e52ba642045d7b314bdd1a1f9b74385e5ea0e985adc971a44b",
+  "source_commit": "a48afa5909d0c9ff58934ebaa50e57aff197cdf6",
+  "started_at": "2026-08-21T03:28:38.334946+00:00",
+  "steps": [
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=index,name,driver_version,pstate,clocks.current.sm,clocks.current.memory,power.limit,memory.total",
+        "--format=csv"
+      ],
+      "duration_seconds": 0.034768,
+      "finished_at": "2026-08-21T03:28:38.369925+00:00",
+      "name": "nvidia-smi",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.335157+00:00"
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "topo",
+        "-m"
+      ],
+      "duration_seconds": 0.072462,
+      "finished_at": "2026-08-21T03:28:38.443131+00:00",
+      "name": "topology",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.370669+00:00"
+    },
+    {
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--version"
+      ],
+      "duration_seconds": 0.023192,
+      "finished_at": "2026-08-21T03:28:38.483025+00:00",
+      "name": "nvcc-version",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.459833+00:00"
+    },
+    {
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--list-gpu-arch"
+      ],
+      "duration_seconds": 0.013314,
+      "finished_at": "2026-08-21T03:28:38.497038+00:00",
+      "name": "nvcc-architectures",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.483724+00:00"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "venv",
+        "--without-pip",
+        "/kaggle/working/gpu-systems-profiler-venv"
+      ],
+      "duration_seconds": 0.225569,
+      "finished_at": "2026-08-21T03:28:38.723660+00:00",
+      "name": "create-venv",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.498091+00:00"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "pip",
+        "--python",
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "install",
+        "--upgrade",
+        "pip"
+      ],
+      "duration_seconds": 2.718705,
+      "finished_at": "2026-08-21T03:28:41.442949+00:00",
+      "name": "bootstrap-pip",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:38.724244+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "wrapt"
+      ],
+      "duration_seconds": 1.693882,
+      "finished_at": "2026-08-21T03:28:43.137349+00:00",
+      "name": "install-runtime-hook-dependency",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:41.443467+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "torch==2.13.0",
+        "--index-url",
+        "https://download.pytorch.org/whl/cu126"
+      ],
+      "duration_seconds": 126.814608,
+      "finished_at": "2026-08-21T03:30:49.952606+00:00",
+      "name": "install-torch-cu126",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:28:43.137998+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/edcadet10/gpu-systems-lab.git",
+        "/kaggle/working/gpu-systems-lab"
+      ],
+      "duration_seconds": 2.157159,
+      "finished_at": "2026-08-21T03:30:52.114752+00:00",
+      "name": "clone",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:30:49.957593+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "checkout",
+        "--detach",
+        "a48afa5909d0c9ff58934ebaa50e57aff197cdf6"
+      ],
+      "duration_seconds": 0.306273,
+      "finished_at": "2026-08-21T03:30:52.421596+00:00",
+      "name": "checkout",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:30:52.115323+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "duration_seconds": 0.003603,
+      "finished_at": "2026-08-21T03:30:52.425723+00:00",
+      "name": "source-commit",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:30:52.422120+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=normal"
+      ],
+      "duration_seconds": 0.006237,
+      "finished_at": "2026-08-21T03:30:52.432450+00:00",
+      "name": "source-status",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:30:52.426213+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "/kaggle/working/gpu-systems-lab[dev,gpu]"
+      ],
+      "duration_seconds": 14.285255,
+      "finished_at": "2026-08-21T03:31:06.718313+00:00",
+      "name": "install-project",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:30:52.433058+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "duration_seconds": 0.381179,
+      "finished_at": "2026-08-21T03:31:07.100263+00:00",
+      "name": "pip-check",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:06.719084+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pip",
+        "freeze",
+        "--all"
+      ],
+      "duration_seconds": 0.34636,
+      "finished_at": "2026-08-21T03:31:07.447300+00:00",
+      "name": "pip-freeze",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:07.100940+00:00"
+    },
+    {
+      "command": [
+        "curl",
+        "-L",
+        "--fail",
+        "--output",
+        "/kaggle/working/nsight-systems-cli-2026.2.1.deb",
+        "https://developer.nvidia.com/downloads/assets/tools/secure/nsight-systems/2026_2/NsightSystems-linux-cli-public-2026.2.1.210-3763964.deb"
+      ],
+      "duration_seconds": 12.807235,
+      "finished_at": "2026-08-21T03:31:20.255235+00:00",
+      "name": "download-nsys",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:07.448000+00:00"
+    },
+    {
+      "command": [
+        "dpkg-deb",
+        "--extract",
+        "/kaggle/working/nsight-systems-cli-2026.2.1.deb",
+        "/kaggle/working/nsight-systems-cli"
+      ],
+      "duration_seconds": 4.702941,
+      "finished_at": "2026-08-21T03:31:25.589358+00:00",
+      "name": "extract-nsys",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:20.886417+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/nsys",
+        "--version"
+      ],
+      "duration_seconds": 0.077818,
+      "finished_at": "2026-08-21T03:31:25.668032+00:00",
+      "name": "nsys-version",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:25.590214+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/nsys",
+        "status",
+        "-e"
+      ],
+      "duration_seconds": 0.075401,
+      "finished_at": "2026-08-21T03:31:25.744116+00:00",
+      "name": "nsys-environment-status",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:25.668715+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-c",
+        "\nimport json\nimport sys\nfrom pathlib import Path\nimport torch\n\npayload = {\n    'torch_version': torch.__version__,\n    'torch_cuda': torch.version.cuda,\n    'device_count': torch.cuda.device_count(),\n    'device_name': torch.cuda.get_device_name(0),\n    'compute_capability': list(torch.cuda.get_device_capability(0)),\n    'cuda_smoke_sum': float((torch.ones(1024, device='cuda') + 1).sum()),\n}\nPath(sys.argv[1]).write_text(json.dumps(payload, indent=2, sort_keys=True) + '\\n')\nprint(json.dumps(payload, indent=2, sort_keys=True))\nassert torch.__version__.startswith('2.13.0+cu126')\nassert torch.version.cuda == '12.6'\nassert payload['device_count'] == 1\nassert payload['compute_capability'] == [6, 0]\n",
+        "/kaggle/working/gpu-systems-profiler-p100/runtime.json"
+      ],
+      "duration_seconds": 2.639467,
+      "finished_at": "2026-08-21T03:31:28.384638+00:00",
+      "name": "runtime-preflight",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:25.745171+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-profiler-venv/bin/python",
+        "-m",
+        "pytest",
+        "-m",
+        "gpu",
+        "-vv",
+        "-s",
+        "tests/test_kernel_reference.py"
+      ],
+      "duration_seconds": 87.220753,
+      "finished_at": "2026-08-21T03:32:55.606779+00:00",
+      "name": "gpu-correctness",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:31:28.386026+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_nsys.sh"
+      ],
+      "duration_seconds": 10.193589,
+      "finished_at": "2026-08-21T03:33:05.801263+00:00",
+      "name": "profile-nsys-torch",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:32:55.607674+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/nsys",
+        "stats",
+        "--report",
+        "cuda_gpu_kern_sum",
+        "--report",
+        "nvtx_sum",
+        "--format",
+        "csv",
+        "--output",
+        "-",
+        "/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-torch.nsys-rep"
+      ],
+      "duration_seconds": 0.200869,
+      "finished_at": "2026-08-21T03:33:06.003094+00:00",
+      "name": "stats-nsys-torch",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:33:05.802225+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_nsys.sh"
+      ],
+      "duration_seconds": 10.971053,
+      "finished_at": "2026-08-21T03:33:16.977647+00:00",
+      "name": "profile-nsys-cuda_extension",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:33:06.006594+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/nsight-systems-cli/opt/nvidia/nsight-systems-cli/2026.2.1/target-linux-x64/nsys",
+        "stats",
+        "--report",
+        "cuda_gpu_kern_sum",
+        "--report",
+        "nvtx_sum",
+        "--format",
+        "csv",
+        "--output",
+        "-",
+        "/kaggle/working/gpu-systems-lab/artifacts/nsys/residual-rmsnorm-cuda_extension.nsys-rep"
+      ],
+      "duration_seconds": 0.194229,
+      "finished_at": "2026-08-21T03:33:17.173464+00:00",
+      "name": "stats-nsys-cuda_extension",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:33:16.979235+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=normal"
+      ],
+      "duration_seconds": 0.006721,
+      "finished_at": "2026-08-21T03:33:17.183658+00:00",
+      "name": "source-status-after-run",
+      "return_code": 0,
+      "started_at": "2026-08-21T03:33:17.176937+00:00"
+    }
+  ],
+  "target": "NvidiaTeslaP100"
+}

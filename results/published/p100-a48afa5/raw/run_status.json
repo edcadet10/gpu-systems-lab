@@ -1,0 +1,422 @@
+{
+  "broad_claim_status": "held",
+  "comparison_exit_code": 0,
+  "expected_compute_capability": [
+    6,
+    0
+  ],
+  "finished_at": "2026-08-21T02:39:06.672970+00:00",
+  "profiler_exit_codes": {
+    "ncu:cuda_extension": 1,
+    "ncu:torch": 1,
+    "nsys:cuda_extension": 1,
+    "nsys:torch": 1
+  },
+  "source_commit": "a48afa5909d0c9ff58934ebaa50e57aff197cdf6",
+  "started_at": "2026-08-21T02:34:35.970934+00:00",
+  "steps": [
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=index,name,driver_version,pstate,clocks.current.sm,clocks.current.memory,power.limit,memory.total",
+        "--format=csv"
+      ],
+      "duration_seconds": 0.059443,
+      "finished_at": "2026-08-21T02:34:36.030415+00:00",
+      "name": "nvidia-smi",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:35.970972+00:00"
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "topo",
+        "-m"
+      ],
+      "duration_seconds": 0.111999,
+      "finished_at": "2026-08-21T02:34:36.144568+00:00",
+      "name": "topology",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:36.032569+00:00"
+    },
+    {
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--version"
+      ],
+      "duration_seconds": 0.022152,
+      "finished_at": "2026-08-21T02:34:36.191223+00:00",
+      "name": "nvcc-version",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:36.169071+00:00"
+    },
+    {
+      "command": [
+        "/usr/local/cuda-12.8/bin/nvcc",
+        "--list-gpu-arch"
+      ],
+      "duration_seconds": 0.012332,
+      "finished_at": "2026-08-21T02:34:36.204317+00:00",
+      "name": "nvcc-architectures",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:36.191985+00:00"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "venv",
+        "--without-pip",
+        "/kaggle/working/gpu-systems-venv"
+      ],
+      "duration_seconds": 0.142736,
+      "finished_at": "2026-08-21T02:34:36.347695+00:00",
+      "name": "create-venv",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:36.204959+00:00"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "pip",
+        "--python",
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "install",
+        "--upgrade",
+        "pip"
+      ],
+      "duration_seconds": 2.595731,
+      "finished_at": "2026-08-21T02:34:38.943937+00:00",
+      "name": "bootstrap-pip",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:36.348206+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "wrapt"
+      ],
+      "duration_seconds": 1.60859,
+      "finished_at": "2026-08-21T02:34:40.553107+00:00",
+      "name": "install-runtime-hook-dependency",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:38.944517+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "torch==2.13.0",
+        "--index-url",
+        "https://download.pytorch.org/whl/cu126"
+      ],
+      "duration_seconds": 119.485627,
+      "finished_at": "2026-08-21T02:36:40.039303+00:00",
+      "name": "install-torch-cu126",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:34:40.553676+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/edcadet10/gpu-systems-lab.git",
+        "/kaggle/working/gpu-systems-lab"
+      ],
+      "duration_seconds": 1.895191,
+      "finished_at": "2026-08-21T02:36:41.935234+00:00",
+      "name": "clone",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:40.040043+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "checkout",
+        "--detach",
+        "a48afa5909d0c9ff58934ebaa50e57aff197cdf6"
+      ],
+      "duration_seconds": 0.287062,
+      "finished_at": "2026-08-21T02:36:42.222915+00:00",
+      "name": "checkout",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:41.935853+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "duration_seconds": 0.003295,
+      "finished_at": "2026-08-21T02:36:42.226766+00:00",
+      "name": "source-commit",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:42.223471+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "--no-patch",
+        "--format=fuller",
+        "HEAD"
+      ],
+      "duration_seconds": 0.002829,
+      "finished_at": "2026-08-21T02:36:42.230016+00:00",
+      "name": "source-show",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:42.227187+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=normal"
+      ],
+      "duration_seconds": 0.005062,
+      "finished_at": "2026-08-21T02:36:42.235559+00:00",
+      "name": "source-status",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:42.230497+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "/kaggle/working/gpu-systems-lab[dev,gpu]"
+      ],
+      "duration_seconds": 11.862402,
+      "finished_at": "2026-08-21T02:36:54.098458+00:00",
+      "name": "install-project",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:42.236056+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "duration_seconds": 0.359301,
+      "finished_at": "2026-08-21T02:36:54.458452+00:00",
+      "name": "pip-check",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:54.099151+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pip",
+        "freeze",
+        "--all"
+      ],
+      "duration_seconds": 0.338907,
+      "finished_at": "2026-08-21T02:36:54.798009+00:00",
+      "name": "pip-freeze",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:54.459102+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-c",
+        "\nimport json\nimport sys\nfrom importlib import import_module\nfrom pathlib import Path\nimport torch\nimport triton\n\nmodule = import_module('gpu_systems_lab.kernels.residual_rmsnorm_cuda')\nsource = Path(module.__file__).resolve().parent.parent / 'csrc' / 'residual_rmsnorm_cuda.cu'\ncapabilities = [list(torch.cuda.get_device_capability(i)) for i in range(torch.cuda.device_count())]\nx = torch.ones(1024, device='cuda', dtype=torch.float16)\npayload = {\n    'torch_version': torch.__version__,\n    'torch_cuda': torch.version.cuda,\n    'triton_version': triton.__version__,\n    'cuda_available': torch.cuda.is_available(),\n    'device_count': torch.cuda.device_count(),\n    'device_names': [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())],\n    'compute_capabilities': capabilities,\n    'packaged_module_path': str(Path(module.__file__).resolve()),\n    'packaged_cuda_source_path': str(source),\n    'packaged_cuda_source_exists': source.is_file(),\n    'cuda_smoke_sum': float((x + 1).sum()),\n}\nPath(sys.argv[1]).write_text(\n    json.dumps(payload, indent=2, sort_keys=True) + '\\n',\n    encoding='utf-8',\n)\nprint(json.dumps(payload, indent=2, sort_keys=True))\nassert torch.__version__.startswith('2.13.0+cu126')\nassert torch.version.cuda == '12.6'\nassert capabilities == [[6, 0]]\nassert source.is_file()\n",
+        "/kaggle/working/gpu-systems-evidence-p100/runtime.json"
+      ],
+      "duration_seconds": 2.58877,
+      "finished_at": "2026-08-21T02:36:57.387626+00:00",
+      "name": "runtime-preflight",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:54.798856+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "torch.utils.collect_env"
+      ],
+      "duration_seconds": 3.00494,
+      "finished_at": "2026-08-21T02:37:00.393210+00:00",
+      "name": "torch-collect-env",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:36:57.388270+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "pytest",
+        "-m",
+        "gpu",
+        "-vv",
+        "-s",
+        "tests/test_kernel_reference.py"
+      ],
+      "duration_seconds": 79.358319,
+      "finished_at": "2026-08-21T02:38:19.752247+00:00",
+      "name": "gpu-correctness",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:37:00.393928+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=normal"
+      ],
+      "duration_seconds": 0.005539,
+      "finished_at": "2026-08-21T02:38:19.758641+00:00",
+      "name": "source-status-before-suite",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:38:19.753102+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "gpu_systems_lab.benchmark_suite",
+        "--rows",
+        "128,1024",
+        "--hidden",
+        "1024,4096,8192",
+        "--dtypes",
+        "float16",
+        "--providers",
+        "torch_eager,cuda_extension",
+        "--process-runs",
+        "5",
+        "--warmup",
+        "25",
+        "--repeats",
+        "100",
+        "--base-seed",
+        "17",
+        "--schedule-seed",
+        "2026",
+        "--epsilon",
+        "1e-6",
+        "--output-dir",
+        "/kaggle/working/gpu-systems-evidence-p100/rmsnorm-suite"
+      ],
+      "duration_seconds": 29.148767,
+      "finished_at": "2026-08-21T02:38:48.908067+00:00",
+      "name": "rmsnorm-suite",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:38:19.759300+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "gpu_systems_lab.cli",
+        "validate-result",
+        "/kaggle/working/gpu-systems-evidence-p100/rmsnorm-suite/manifest.json"
+      ],
+      "duration_seconds": 0.262724,
+      "finished_at": "2026-08-21T02:38:49.171652+00:00",
+      "name": "validate-suite",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:38:48.908928+00:00"
+    },
+    {
+      "command": [
+        "/kaggle/working/gpu-systems-venv/bin/python",
+        "-m",
+        "gpu_systems_lab.cli",
+        "compare-suite",
+        "/kaggle/working/gpu-systems-evidence-p100/rmsnorm-suite/manifest.json",
+        "--candidate",
+        "cuda_extension",
+        "--baseline",
+        "torch_eager",
+        "--minimum-reduction-percent",
+        "5",
+        "--fail-on-retract",
+        "--output",
+        "/kaggle/working/gpu-systems-evidence-p100/rmsnorm-suite/cuda-extension-vs-eager.json"
+      ],
+      "duration_seconds": 0.261059,
+      "finished_at": "2026-08-21T02:38:49.433488+00:00",
+      "name": "compare-suite",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:38:49.172429+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_ncu.sh"
+      ],
+      "duration_seconds": 8.303416,
+      "finished_at": "2026-08-21T02:38:57.737894+00:00",
+      "name": "profile-ncu-torch",
+      "return_code": 1,
+      "started_at": "2026-08-21T02:38:49.434478+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_ncu.sh"
+      ],
+      "duration_seconds": 8.922162,
+      "finished_at": "2026-08-21T02:39:06.660897+00:00",
+      "name": "profile-ncu-cuda_extension",
+      "return_code": 1,
+      "started_at": "2026-08-21T02:38:57.738735+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_nsys.sh"
+      ],
+      "duration_seconds": 0.002814,
+      "finished_at": "2026-08-21T02:39:06.664657+00:00",
+      "name": "profile-nsys-torch",
+      "return_code": 1,
+      "started_at": "2026-08-21T02:39:06.661843+00:00"
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/profile_nsys.sh"
+      ],
+      "duration_seconds": 0.002357,
+      "finished_at": "2026-08-21T02:39:06.667630+00:00",
+      "name": "profile-nsys-cuda_extension",
+      "return_code": 1,
+      "started_at": "2026-08-21T02:39:06.665273+00:00"
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--short",
+        "--untracked-files=normal"
+      ],
+      "duration_seconds": 0.003714,
+      "finished_at": "2026-08-21T02:39:06.672375+00:00",
+      "name": "source-status-after-run",
+      "return_code": 0,
+      "started_at": "2026-08-21T02:39:06.668661+00:00"
+    }
+  ],
+  "success": true,
+  "target": "NvidiaTeslaP100",
+  "transient_cleanup": {
+    "/kaggle/working/gpu-systems-lab": "removed",
+    "/kaggle/working/gpu-systems-venv": "removed"
+  }
+}

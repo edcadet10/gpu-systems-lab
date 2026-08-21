@@ -5,7 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
+import shutil
 import statistics
+import subprocess
 import time
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
@@ -19,10 +22,12 @@ from gpu_systems_lab.benchmark_inputs import (
     positive_integer,
     positive_integer_list,
 )
+from gpu_systems_lab.correctness import CORRECTNESS_COMPARISON, CORRECTNESS_TOLERANCES
 from gpu_systems_lab.kernels.residual_rmsnorm import (
     residual_rmsnorm_reference,
     residual_rmsnorm_triton,
 )
+from gpu_systems_lab.kernels.residual_rmsnorm_cuda import residual_rmsnorm_cuda
 from gpu_systems_lab.reporting import (
     git_commit,
     git_dirty,
@@ -30,7 +35,7 @@ from gpu_systems_lab.reporting import (
     runtime_metadata,
 )
 
-PROVIDERS = ("torch_eager", "triton", "torch_compile")
+PROVIDERS = ("torch_eager", "cuda_extension", "triton", "torch_compile")
 
 
 def _frameworks() -> tuple[Any, Any]:
@@ -80,29 +85,105 @@ def _require_correctness(
     provider: str,
     shape: tuple[int, int],
     max_absolute_error: float,
-    absolute_tolerance: float,
+    max_error_ratio: float,
 ) -> None:
-    if not math.isfinite(max_absolute_error) or max_absolute_error > absolute_tolerance:
+    if (
+        not math.isfinite(max_absolute_error)
+        or not math.isfinite(max_error_ratio)
+        or max_error_ratio > 1
+    ):
         raise AssertionError(
             f"{provider} failed correctness for {shape}: "
-            f"{max_absolute_error} > {absolute_tolerance}"
+            f"max_absolute_error={max_absolute_error}, max_error_ratio={max_error_ratio}"
         )
+
+
+def _correctness_metrics(
+    candidate: Any,
+    reference: Any,
+    dtype_name: str,
+) -> dict[str, float | str]:
+    """Return scale-aware error metrics using the framework's documented defaults."""
+
+    relative_tolerance, absolute_tolerance = CORRECTNESS_TOLERANCES[dtype_name]
+    reference_values = reference.double()
+    reference_magnitude = reference_values.abs()
+    absolute_error = (candidate.double() - reference_values).abs()
+    allowed_error = absolute_tolerance + relative_tolerance * reference_magnitude
+    error_ratio = absolute_error / allowed_error
+    flat_error = absolute_error.reshape(-1)
+    flat_reference_magnitude = reference_magnitude.reshape(-1)
+    flat_error_ratio = error_ratio.reshape(-1)
+    max_absolute_index = int(flat_error.argmax())
+    max_ratio_index = int(flat_error_ratio.argmax())
+    return {
+        "max_absolute_error": float(flat_error[max_absolute_index]),
+        "max_absolute_error_reference_magnitude": float(
+            flat_reference_magnitude[max_absolute_index]
+        ),
+        "absolute_tolerance": absolute_tolerance,
+        "relative_tolerance": relative_tolerance,
+        "max_error_ratio": float(flat_error_ratio[max_ratio_index]),
+        "max_error_ratio_absolute_error": float(flat_error[max_ratio_index]),
+        "max_error_ratio_reference_magnitude": float(flat_reference_magnitude[max_ratio_index]),
+        "comparison": CORRECTNESS_COMPARISON,
+    }
 
 
 def _device_metadata(torch: Any, triton: Any) -> dict[str, Any]:
     device_index = torch.cuda.current_device()
     properties = torch.cuda.get_device_properties(device_index)
+    compute_capability = list(torch.cuda.get_device_capability(device_index))
     return {
         "device_index": device_index,
         "device_name": properties.name,
-        "compute_capability": list(torch.cuda.get_device_capability(device_index)),
+        "compute_capability": compute_capability,
         "total_memory_bytes": properties.total_memory,
         "pytorch_version": torch.__version__,
         "triton_version": triton.__version__,
         "cuda_runtime_version": torch.version.cuda,
         "cudnn_version": torch.backends.cudnn.version(),
+        **_cuda_compiler_metadata(torch),
         **runtime_metadata(),
         **nvidia_smi_metadata(device_index),
+    }
+
+
+def _cuda_compiler_metadata(torch: Any) -> dict[str, str | None]:
+    try:
+        from torch.utils.cpp_extension import CUDA_HOME
+    except (ImportError, RuntimeError):
+        CUDA_HOME = None
+    nvcc = str(Path(CUDA_HOME) / "bin" / "nvcc") if CUDA_HOME else shutil.which("nvcc")
+    compiler_version = None
+    if nvcc:
+        try:
+            completed = subprocess.run(
+                [nvcc, "--version"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            completed = None
+        if completed is not None and completed.returncode == 0:
+            lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+            compiler_version = lines[-1] if lines else None
+    architecture_override = os.environ.get("TORCH_CUDA_ARCH_LIST")
+    if architecture_override is None:
+        visible_capabilities = {
+            tuple(torch.cuda.get_device_capability(index))
+            for index in range(torch.cuda.device_count())
+        }
+        architecture_list = ";".join(
+            f"{major}.{minor}" for major, minor in sorted(visible_capabilities)
+        )
+    else:
+        architecture_list = architecture_override
+    return {
+        "cuda_compiler_version": compiler_version,
+        "cuda_arch_list": architecture_list or None,
     }
 
 
@@ -122,7 +203,7 @@ def _build_report(
     """Build the versioned report independently of GPU execution."""
 
     return {
-        "schema_version": 3,
+        "schema_version": 5,
         "benchmark_type": "residual_rmsnorm",
         "generated_at": generated_at or datetime.now(timezone.utc).isoformat(),
         "git_commit": commit,
@@ -173,6 +254,8 @@ def run_benchmark(
         raise ValueError(f"unsupported provider: {unknown_providers[0]}")
     if dtype_name not in ("float16", "bfloat16", "float32"):
         raise ValueError(f"unsupported dtype: {dtype_name}")
+    if "cuda_extension" in providers and dtype_name != "float16":
+        raise ValueError("the CUDA extension provider supports float16 only")
 
     torch, triton = _frameworks()
     dtypes = {
@@ -181,7 +264,6 @@ def run_benchmark(
         "float32": torch.float32,
     }
     dtype = dtypes[dtype_name]
-    absolute_tolerance = {"float16": 2e-3, "bfloat16": 2e-2, "float32": 2e-5}[dtype_name]
     torch.manual_seed(seed)
     results: list[dict[str, Any]] = []
 
@@ -202,6 +284,13 @@ def run_benchmark(
 
             implementations: dict[str, Callable[[], Any]] = {
                 "torch_eager": eager,
+                "cuda_extension": partial(
+                    residual_rmsnorm_cuda,
+                    input_tensor,
+                    residual,
+                    weight,
+                    epsilon,
+                ),
                 "triton": triton_implementation,
             }
             if "torch_compile" in providers:
@@ -217,12 +306,12 @@ def run_benchmark(
                     candidate, first_call_latency_ms = _time_first_call(
                         torch, implementations[provider]
                     )
-                max_absolute_error = float((candidate.float() - reference.float()).abs().max())
+                correctness = _correctness_metrics(candidate, reference, dtype_name)
                 _require_correctness(
                     provider,
                     (row_count, hidden_size),
-                    max_absolute_error,
-                    absolute_tolerance,
+                    float(correctness["max_absolute_error"]),
+                    float(correctness["max_error_ratio"]),
                 )
                 samples = _time_cuda(torch, implementations[provider], warmup, repeats)
                 results.append(
@@ -230,10 +319,7 @@ def run_benchmark(
                         "shape": [row_count, hidden_size],
                         "dtype": dtype_name,
                         "provider": provider,
-                        "correctness": {
-                            "max_absolute_error": max_absolute_error,
-                            "absolute_tolerance": absolute_tolerance,
-                        },
+                        "correctness": correctness,
                         "first_call_latency_ms": first_call_latency_ms,
                         "latency_ms": {
                             "samples": samples,

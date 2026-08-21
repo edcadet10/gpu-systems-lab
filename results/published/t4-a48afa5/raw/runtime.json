@@ -1,0 +1,25 @@
+{
+  "compute_capabilities": [
+    [
+      7,
+      5
+    ],
+    [
+      7,
+      5
+    ]
+  ],
+  "cuda_available": true,
+  "cuda_smoke_sum": 2048.0,
+  "device_count": 2,
+  "device_names": [
+    "Tesla T4",
+    "Tesla T4"
+  ],
+  "packaged_cuda_source_exists": true,
+  "packaged_cuda_source_path": "/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/csrc/residual_rmsnorm_cuda.cu",
+  "packaged_module_path": "/kaggle/working/gpu-systems-venv/lib/python3.12/site-packages/gpu_systems_lab/kernels/residual_rmsnorm_cuda.py",
+  "torch_cuda": "12.6",
+  "torch_version": "2.13.0+cu126",
+  "triton_version": "3.7.1"
+}

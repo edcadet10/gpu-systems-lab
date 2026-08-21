@@ -1,0 +1,7 @@
+{
+  "benchmark_type": "allreduce",
+  "schema_file": "allreduce-v3.schema.json",
+  "schema_version": 3,
+  "valid": true,
+  "validated_reports": 1
+}

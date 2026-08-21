@@ -1,0 +1,9 @@
+# Writing JSON output to /kaggle/working/gpu-systems-evidence-t4/allreduce-nccl-tests.json
+# nccl-tests version 2.19.7 nccl-headers=22903 nccl-library=22903
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 2 minBytes 134217728 maxBytes 134217728 step: 2(factor) warmup iters: 10 iters: 50 agg iters: 1 validation: 1 graph: 0 unalign: 0
+# Per-Iteration Report: CUDA event timing; i_* uses max over process rows 
+#
+# Using devices
+aa507dfa95a4: Test CUDA failure util.cu:674 'CUDA driver version is insufficient for CUDA runtime version'
+ .. aa507dfa95a4 pid 1716: Test failure common.cu:1454
