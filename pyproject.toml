@@ -27,13 +27,13 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-torch = ["torch>=2.10,<2.14"]
+torch = ["torch>=2.10,<2.15"]
 reports = ["jsonschema>=4.25,<5"]
 gpu = [
   "jsonschema>=4.25,<5",
   "ninja>=1.11,<2",
   "numpy>=2,<3",
-  "torch>=2.10,<2.14",
+  "torch>=2.10,<2.15",
   "triton>=3.5,<3.8; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 dev = [
